@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="poster_height">240dp</dimen>
+    <dimen name="poster_width">160dp</dimen>
+    <dimen name="poster_margin">5dp</dimen>
+    <dimen name="data_margin">85dp</dimen>
+    <dimen name="data_card_margin">5dp</dimen>
+    <dimen name="corner_radius">20dp</dimen>
+    <dimen name="data_elevation">8dp</dimen>
+    <dimen name="poster_elevation">10dp</dimen>
+    <dimen name="data_start_margin">85dp</dimen>
+    <dimen name="title_size">18sp</dimen>
+    <dimen name="heart_dimension">24dp</dimen>
+    <dimen name="data_text_size">11sp</dimen>
+
+    <!-- Cards -->
+    <dimen name="event_corner_radius">16dp</dimen>
+    <dimen name="event_image_elevation">4dp</dimen>
+    <dimen name="event_data_elevation">3dp</dimen>
+
+    <!-- Inner padding -->
+    <dimen name="event_card_padding">10dp</dimen>
+
+    <!-- Text sizes -->
+    <dimen name="event_title_size">16sp</dimen>
+    <dimen name="event_text_size">13sp</dimen>
+
+
+</resources>
