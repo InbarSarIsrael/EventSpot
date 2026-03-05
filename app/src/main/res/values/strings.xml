@@ -9,4 +9,6 @@
     <string name="username">Username</string>
     <string name="date">date</string>
     <string name="comment_text">Comment text</string>
+
+    <string name="google_maps_key">AIzaSyB7d4DNoomrA7wwouJUV8xNBl2C012hem4</string>
 </resources>
