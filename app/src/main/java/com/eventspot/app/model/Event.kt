@@ -15,7 +15,7 @@ data class Event(
 
     val dateTimeMillis: Long = 0L,          // Event date & time as timestamp
 
-    val location: String = "",              // Event location name
+    val address: String = "",              // Event address location
 
     val description: String = "",           // Short event description
 

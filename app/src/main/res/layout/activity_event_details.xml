@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/eventDetails_scroll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".EventDetailsActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Back Button -->
+        <ImageButton
+            android:id="@+id/eventDetails_BTN_back"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="start"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/back"
+            android:padding="8dp"
+            android:src="@drawable/arrow_left"
+            app:tint="@color/black" />
+
+        <!-- Event image -->
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/eventDetails_IMG_event"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            android:adjustViewBounds="true"
+            android:scaleType="centerCrop"
+            tools:srcCompat="@tools:sample/avatars" />
+
+        <!-- Event information card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/eventDetails_card_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Event name -->
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/eventDetails_LBL_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/event_name"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/black"
+                    tools:text="Event Name" />
+
+                <!-- Producer -->
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/eventDetails_LBL_producer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/producer"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/black"
+                    tools:text="Producer" />
+
+                <!-- Date -->
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/eventDetails_LBL_date"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/date1"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/black"
+                    tools:text="Date: 12/03/2026" />
+
+                <!-- Time -->
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/eventDetails_LBL_time"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/time"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/black"
+                    tools:text="Time: 20:00" />
+
+                <!-- Location -->
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/eventDetails_LBL_location"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/location"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/black"
+                    tools:text="Location: Rothschild Blvd, Tel Aviv" />
+
+                <!-- Categories -->
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/eventDetails_LBL_categories"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/categories"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/black"
+                    tools:text="Categories: Party, Music, Outdoor" />
+
+                <!-- Description -->
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/eventDetails_LBL_descriptionTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/description"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/black" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/eventDetails_LBL_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/event_description"
+                    android:textSize="15sp"
+                    android:textColor="@android:color/black"
+                    tools:text="A live music summer event in the heart of Tel Aviv with DJs, food stands and an open social area." />
+
+                <!-- Join button -->
+                <Button
+                    android:id="@+id/eventDetails_BTN_join"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="@string/join_event"
+                    android:minHeight="48dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Optional comments section -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/eventDetails_card_comments"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/eventDetails_LBL_commentsTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/comments"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/black" />
+
+                <EditText
+                    android:id="@+id/eventDetails_EDT_comment"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:hint="@string/write_a_comment"
+                    android:inputType="textMultiLine|textCapSentences"
+                    android:minHeight="48dp" />
+
+                <Button
+                    android:id="@+id/eventDetails_BTN_sendComment"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/add_comment"
+                    android:minHeight="48dp" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/eventDetails_RV_comments"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+</ScrollView>

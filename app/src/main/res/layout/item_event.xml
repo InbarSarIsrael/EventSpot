@@ -61,7 +61,7 @@
 
             <!-- Producer -->
             <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/event_IMG_producer"
+                android:id="@+id/event_LBL_producer"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:textSize="@dimen/event_text_size"
@@ -71,28 +71,18 @@
                 app:layout_constraintTop_toBottomOf="@id/event_LBL_title"
                 tools:text="Producer Name" />
 
-            <!-- Date -->
+            <!-- Date & Time -->
             <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/event_LBL_date"
+                android:id="@+id/event_LBL_dateTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="@dimen/event_text_size"
                 android:layout_marginTop="4dp"
                 android:layout_marginEnd="8dp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/event_LBL_time"
-                app:layout_constraintTop_toBottomOf="@id/event_IMG_producer"
-                tools:text="Date  " />
+                app:layout_constraintTop_toBottomOf="@id/event_LBL_producer"
+                tools:text="Date Time " />
 
-            <!-- Time -->
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/event_LBL_time"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="@dimen/event_text_size"
-                app:layout_constraintStart_toEndOf="@id/event_LBL_date"
-                app:layout_constraintTop_toTopOf="@id/event_LBL_date"
-                tools:text="Time" />
 
             <!-- Location -->
             <com.google.android.material.textview.MaterialTextView
@@ -103,7 +93,7 @@
                 android:layout_marginTop="4dp"
                 app:layout_constraintStart_toStartOf="@id/event_LBL_title"
                 app:layout_constraintEnd_toEndOf="@id/event_LBL_title"
-                app:layout_constraintTop_toBottomOf="@id/event_LBL_date"
+                app:layout_constraintTop_toBottomOf="@id/event_LBL_dateTime"
                 tools:text="Location" />
 
             <!-- Distance -->

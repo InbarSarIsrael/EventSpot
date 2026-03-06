@@ -11,4 +11,20 @@
     <string name="comment_text">Comment text</string>
 
     <string name="google_maps_key">AIzaSyB7d4DNoomrA7wwouJUV8xNBl2C012hem4</string>
+    <string name="all_events">All Events</string>
+    <string name="welcome">Welcome</string>
+    <string name="search">Search</string>
+    <string name="back">Back</string>
+    <string name="date1">Date:</string>
+    <string name="producer">Producer:</string>
+    <string name="event_name">Event Name</string>
+    <string name="time">Time:</string>
+    <string name="location">Location:</string>
+    <string name="categories">Categories:</string>
+    <string name="description">Description</string>
+    <string name="event_description">Event description</string>
+    <string name="join_event">Join Event</string>
+    <string name="comments">Comments</string>
+    <string name="write_a_comment">Write a comment</string>
+    <string name="add_comment">Add Comment</string>
 </resources>

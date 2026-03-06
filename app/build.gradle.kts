@@ -50,4 +50,5 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(libs.play.services.maps)
     implementation(libs.play.services.location)
+    implementation(libs.glide)
 }

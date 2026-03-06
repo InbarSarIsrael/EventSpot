@@ -5,56 +5,139 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.eventspot.app.R
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.eventspot.app.adapters.EventAdapter
+import com.eventspot.app.databinding.FragmentEventsBinding
+import com.eventspot.app.model.Event
+import android.Manifest
+import android.content.Intent
+import androidx.activity.result.contract.ActivityResultContracts
+import com.eventspot.app.EventDetailsActivity
+import com.google.android.gms.location.LocationServices
+import com.eventspot.app.utilities.UserLocationHelper
+import com.google.android.gms.location.FusedLocationProviderClient
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [EventsFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class EventsFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+    private var _binding: FragmentEventsBinding? = null
+    private val binding get() = _binding!!
+    private lateinit var eventAdapter: EventAdapter
+
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+
+    private lateinit var locationHelper: UserLocationHelper
+
+    private val requestLocationPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                fetchUserLocation()
+            } else {
+                eventAdapter.updateUserLocation(null)
+            }
+        }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentEventsBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+        locationHelper = UserLocationHelper(requireContext(), fusedLocationClient)
+
+        setupRecyclerView()
+        loadDummyEvents()
+        checkLocationPermission()
+    }
+
+    private fun setupRecyclerView() {
+        eventAdapter = EventAdapter { event ->
+            val intent = Intent(requireContext(), EventDetailsActivity::class.java)
+            startActivity(intent)
+        }
+
+
+        binding.eventsRVList.layoutManager = LinearLayoutManager(requireContext())
+        binding.eventsRVList.adapter = eventAdapter
+        binding.eventsRVList.setHasFixedSize(true)
+    }
+
+    private fun checkLocationPermission() {
+        if (locationHelper.hasFineLocationPermission()) {
+            fetchUserLocation()
+        } else {
+            requestLocationPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_events, container, false)
+    private fun fetchUserLocation() {
+        locationHelper.getUserLocation { location ->
+            eventAdapter.updateUserLocation(location)
+        }
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment EventsFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            EventsFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
+    private fun loadDummyEvents() {
+        val dummyEvents = listOf(
+            Event(
+                id = "1",
+                name = "Live Jazz Night",
+                producer = "Bar Rubina",
+                address = "Bar Rubina, Tel Aviv",
+                description = "An intimate live jazz evening with local musicians.",
+                categories = listOf("Music", "Nightlife"),
+                lat = 32.0733,
+                lng = 34.7747,
+                imageUrl = "https://static.wixstatic.com/media/740c76_373359e8e9f149a5a020c37c10fdb49b~mv2.jpg/v1/fill/w_640,h_422,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/740c76_373359e8e9f149a5a020c37c10fdb49b~mv2.jpg",
+                dateTimeMillis = System.currentTimeMillis()
+            ),
+            Event(
+                id = "2",
+                name = "Food Festival",
+                producer = "Sarona Market",
+                address = "Sarona Market, Tel Aviv",
+                description = "Street food festival with top Israeli chefs.",
+                categories = listOf("Food", "Festival"),
+                lat = 32.0717,
+                lng = 34.7873,
+                imageUrl = "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/19/fb/18/d0/sarona-market.jpg?w=1200&h=-1&s=1",
+                dateTimeMillis = System.currentTimeMillis()
+            ),
+            Event(
+                id = "3",
+                name = "Sunset Yoga",
+                producer = "Tel Aviv Port",
+                address = "Tel Aviv Port, Tel Aviv",
+                description = "Outdoor sunset yoga session by the sea.",
+                categories = listOf("Sport", "Wellness"),
+                lat = 32.1005,
+                lng = 34.7746,
+                imageUrl = "https://images.stockcake.com/public/7/e/c/7eccaeb1-9d8d-4b1f-a08e-0d9cea534390_large/sunset-yoga-meditation-stockcake.jpg",
+                dateTimeMillis = System.currentTimeMillis()
+            ),
+            Event(
+                id = "4",
+                name = "Open Air Movie Night",
+                producer = "Azrieli Center",
+                address = "Azrieli Center, Tel Aviv",
+                description = "Outdoor movie screening on the rooftop with city skyline views.",
+                categories = listOf("Cinema", "Nightlife"),
+                lat = 32.0740,
+                lng = 34.7922,
+                imageUrl = "https://static.vecteezy.com/system/resources/thumbnails/074/178/701/small/a-full-red-and-white-striped-container-filled-with-fluffy-popcorn-photo.jpg",
+                dateTimeMillis = System.currentTimeMillis()
+            )
+        )
+        eventAdapter.submitList(dummyEvents)
     }
 }
