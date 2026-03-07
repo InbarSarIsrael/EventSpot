@@ -58,8 +58,10 @@ class EventsFragment : Fragment() {
 
     private fun setupRecyclerView() {
         eventAdapter = EventAdapter { event ->
-            val intent = Intent(requireContext(), EventDetailsActivity::class.java)
-            startActivity(intent)
+            val intent = Intent(requireContext(), EventDetailsActivity::class.java).apply {
+                putExtra("event_id", event.id)
+            }
+                startActivity(intent)
         }
 
 

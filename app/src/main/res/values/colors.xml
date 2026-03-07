@@ -2,4 +2,10 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+<!--    background colors-->
+    <color name="login_background">#F8F9FD</color>
+    <color name="login_primary">#5B4CF0</color>
+    <color name="login_primary_dark">#4638C7</color>
+    <color name="login_text">#1F1F1F</color>
+    <color name="login_text_secondary">#666666</color>
 </resources>

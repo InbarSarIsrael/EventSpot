@@ -27,4 +27,7 @@
     <string name="comments">Comments</string>
     <string name="write_a_comment">Write a comment</string>
     <string name="add_comment">Add Comment</string>
+    <string name="event_page">Event Page</string>
+    <string name="welcome_to_eventspot">Welcome to EventSpot</string>
+    <string name="discover_events_near_you">Discover events near you</string>
 </resources>

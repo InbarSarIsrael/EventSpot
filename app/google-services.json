@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "892298434061",
+    "project_id": "eventspot-e98a9",
+    "storage_bucket": "eventspot-e98a9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:892298434061:android:02a150f01d7b08c4bca744",
+        "android_client_info": {
+          "package_name": "com.eventspot.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "892298434061-4k0ji8fltfej8c132rca1gs0euf57mf9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.eventspot.app",
+            "certificate_hash": "467449c5d90a7a0c3f04e13a01e8e13f8ed7f939"
+          }
+        },
+        {
+          "client_id": "892298434061-gcemau0hhtobsvcm0dhaqk2u0vbeomrr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.eventspot.app",
+            "certificate_hash": "bcfd230313b4e195201f8037bc92bf6cbe7a8e88"
+          }
+        },
+        {
+          "client_id": "892298434061-4gsfhcdbggakq1j55oje1m1aqc52uf2e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAocGaADl1b_7noLst-IfNt_hRL0mh2KBg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "892298434061-4gsfhcdbggakq1j55oje1m1aqc52uf2e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

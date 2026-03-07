@@ -139,6 +139,18 @@
                     android:textColor="@android:color/black"
                     tools:text="A live music summer event in the heart of Tel Aviv with DJs, food stands and an open social area." />
 
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/eventDetails_LBL_link"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/event_page"
+                    android:textColor="@android:color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    tools:text="Open event page" />
+
                 <!-- Join button -->
                 <Button
                     android:id="@+id/eventDetails_BTN_join"
