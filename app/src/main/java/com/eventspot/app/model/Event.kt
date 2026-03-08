@@ -7,7 +7,7 @@ enum class EventSource {
 data class Event(
     val id: String = "",                    // Unique ID of the event (used for update/delete in DB)
 
-    val imageUrl: String = "",              // URL of the event image (Firebase Storage or external API)
+    val imageUri: String = "",              // URL of the event image (Firebase Storage or external API)
 
     val name: String = "",                  // Event title
 
@@ -27,7 +27,10 @@ data class Event(
 
     val source: EventSource = EventSource.USER, // Indicates if event came from USER or API
 
-    val createdAt: Long = System.currentTimeMillis() // Creation timestamp (used for "new events" sorting)
+    val createdAt: Long = System.currentTimeMillis(), // Creation timestamp (used for "new events" sorting)
+
+    var isSaved: Boolean = false,   // True if the user marked it as saved
+
 )
 
 

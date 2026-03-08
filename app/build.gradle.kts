@@ -52,9 +52,17 @@ dependencies {
     implementation(libs.play.services.maps)
     implementation(libs.play.services.location)
     implementation(libs.glide)
+
     // Firebase BoM
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
+
     // AuthUI
     implementation(libs.firebase.ui.auth)
+
+    // Firebase firestore & storage
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.storage)
+    // for await function
+    implementation(libs.coroutines.play.services)
 }

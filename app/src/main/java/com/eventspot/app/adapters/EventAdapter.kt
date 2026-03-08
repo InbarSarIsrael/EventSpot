@@ -17,7 +17,7 @@ import java.util.Date
 import java.util.Locale
 
 class EventAdapter(
-    private val onEventClick: (Event) -> Unit
+    private val onEventClick: (Event) -> Unit,
 ) : ListAdapter<Event, EventAdapter.EventViewHolder>(EventDiffCallback()) {
 
     private var userLocation: Location? = null
@@ -51,7 +51,11 @@ class EventAdapter(
             binding.eventLBLLocation.text = event.address
             binding.eventLBLDesc.text = event.description
 
-            bindImage(event.imageUrl)
+            binding.eventIGMSaved.setImageResource(
+                if (event.isSaved) R.drawable.saved else R.drawable.empty_save
+            )
+
+            bindImage(event.imageUri)
             bindDistance(event)
             bindCategories(event.categories)
 

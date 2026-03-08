@@ -1,12 +1,22 @@
 package com.eventspot.app
 
+import android.annotation.SuppressLint
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
 import com.eventspot.app.databinding.ActivityEventDetailsBinding
+import com.eventspot.app.model.Event
+import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class EventDetailsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityEventDetailsBinding
+
+    private val db = FirebaseFirestore.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,20 +35,64 @@ class EventDetailsActivity : AppCompatActivity() {
     }
 
     private fun loadEventData() {
-        val eventName = intent.getStringExtra("event_name") ?: ""
-        val eventProducer = intent.getStringExtra("event_producer") ?: ""
-        val eventDate = intent.getStringExtra("event_date") ?: ""
-        val eventTime = intent.getStringExtra("event_time") ?: ""
-        val eventLocation = intent.getStringExtra("event_location") ?: ""
-        val eventDescription = intent.getStringExtra("event_description") ?: ""
-        val eventCategories = intent.getStringArrayListExtra("event_categories") ?: arrayListOf()
+        val eventId = intent.getStringExtra("event_id")
 
-        binding.eventDetailsLBLName.text = eventName
-        binding.eventDetailsLBLProducer.text = "Producer: $eventProducer"
-        binding.eventDetailsLBLDate.text = "Date: $eventDate"
-        binding.eventDetailsLBLTime.text = "Time: $eventTime"
-        binding.eventDetailsLBLLocation.text = "Location: $eventLocation"
-        binding.eventDetailsLBLCategories.text = "Categories: ${eventCategories.joinToString(", ")}"
-        binding.eventDetailsLBLDescription.text = eventDescription
+        if (eventId.isNullOrEmpty()) {
+            Toast.makeText(this, "Event ID is missing", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+
+        db.collection("events")
+            .document(eventId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val event = document.toObject(Event::class.java)?.copy(id = document.id)
+
+                    if (event != null) {
+                        bindEventData(event)
+                    } else {
+                        Toast.makeText(this, "Failed to load event data", Toast.LENGTH_SHORT).show()
+                        finish()
+                    }
+                } else {
+                    Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            }
+            .addOnFailureListener { exception ->
+                // Log.e("EventDetailsActivity", "Error loading event", exception)
+                Toast.makeText(this, "Error loading event", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun bindEventData(event: Event) {
+        binding.eventDetailsLBLName.text = event.name
+        binding.eventDetailsLBLProducer.text = "Producer: ${event.producer}"
+        binding.eventDetailsLBLLocation.text = "Address: ${event.address}"
+        binding.eventDetailsLBLDescription.text = event.description
+        binding.eventDetailsLBLCategories.text =
+            "Categories: ${event.categories.joinToString(", ")}"
+        binding.eventDetailsLBLDate.text = "Date: ${formatDate(event.dateTimeMillis)}"
+        binding.eventDetailsLBLTime.text = "Time: ${formatTime(event.dateTimeMillis)}"
+
+        if (event.imageUri.isNotEmpty()) {
+            Glide.with(this)
+                .load(event.imageUri)
+                .into(binding.eventDetailsIMGEvent)
+        }
+    }
+
+    private fun formatDate(dateTimeMillis: Long): String {
+        val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+        return sdf.format(Date(dateTimeMillis))
+    }
+
+    private fun formatTime(dateTimeMillis: Long): String {
+        val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+        return sdf.format(Date(dateTimeMillis))
     }
 }

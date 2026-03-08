@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.eventspot.app" />
+                  <option name="mobileSdkAppId" value="1:892298434061:android:02a150f01d7b08c4bca744" />
+                  <option name="projectId" value="eventspot-e98a9" />
+                  <option name="projectNumber" value="892298434061" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
