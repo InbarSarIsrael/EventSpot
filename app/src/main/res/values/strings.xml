@@ -30,4 +30,6 @@
     <string name="event_page">Event Page</string>
     <string name="welcome_to_eventspot">Welcome to EventSpot</string>
     <string name="discover_events_near_you">Discover events near you</string>
+    <string name="event_address">Event address</string>
+    <string name="event_title">Event title</string>
 </resources>

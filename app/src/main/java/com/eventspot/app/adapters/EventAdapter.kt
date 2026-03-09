@@ -48,7 +48,7 @@ class EventAdapter(
             binding.eventLBLTitle.text = event.name
             binding.eventLBLProducer.text = event.producer
             binding.eventLBLDateTime.text = formatDateTime(event.dateTimeMillis)
-            binding.eventLBLLocation.text = event.address
+            binding.eventLBLAddress.text = event.address
             binding.eventLBLDesc.text = event.description
 
             binding.eventIGMSaved.setImageResource(
@@ -65,10 +65,8 @@ class EventAdapter(
         }
 
         private fun bindImage(imageUrl: String) {
-            val imageSource = if (imageUrl.isBlank()) {
+            val imageSource = imageUrl.ifBlank {
                 R.drawable.unavailable_photo
-            } else {
-                imageUrl
             }
             Glide.with(binding.eventIMG.context)
                 .load(imageSource)
