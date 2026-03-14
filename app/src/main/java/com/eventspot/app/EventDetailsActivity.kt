@@ -59,6 +59,41 @@ class EventDetailsActivity : AppCompatActivity() {
         }
     }
 
+//    private fun loadEventData() {
+//        val eventId = intent.getStringExtra("event_id")
+//
+//        if (eventId.isNullOrEmpty()) {
+//            Toast.makeText(this, "Event ID is missing", Toast.LENGTH_SHORT).show()
+//            finish()
+//            return
+//        }
+//
+//        db.collection("events")
+//            .document(eventId)
+//            .get()
+//            .addOnSuccessListener { document ->
+//                if (document.exists()) {
+//                    val event = document.toObject(Event::class.java)?.copy(id = document.id)
+//
+//                    if (event != null) {
+//                        currentEvent = event
+//                        bindEventData(event)
+//                    } else {
+//                        Toast.makeText(this, "Failed to load event data", Toast.LENGTH_SHORT).show()
+//                        finish()
+//                    }
+//                } else {
+//                    Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show()
+//                    finish()
+//                }
+//            }
+//            .addOnFailureListener { exception ->
+//                // Log.e("EventDetailsActivity", "Error loading event", exception)
+//                Toast.makeText(this, "Error loading event", Toast.LENGTH_SHORT).show()
+//                finish()
+//            }
+//    }
+
     private fun loadEventData() {
         val eventId = intent.getStringExtra("event_id")
 
@@ -68,30 +103,7 @@ class EventDetailsActivity : AppCompatActivity() {
             return
         }
 
-        db.collection("events")
-            .document(eventId)
-            .get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    val event = document.toObject(Event::class.java)?.copy(id = document.id)
-
-                    if (event != null) {
-                        currentEvent = event
-                        bindEventData(event)
-                    } else {
-                        Toast.makeText(this, "Failed to load event data", Toast.LENGTH_SHORT).show()
-                        finish()
-                    }
-                } else {
-                    Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show()
-                    finish()
-                }
-            }
-            .addOnFailureListener { exception ->
-                // Log.e("EventDetailsActivity", "Error loading event", exception)
-                Toast.makeText(this, "Error loading event", Toast.LENGTH_SHORT).show()
-                finish()
-            }
+        fetchEventById(eventId)
     }
 
     @SuppressLint("SetTextI18n")
@@ -115,6 +127,40 @@ class EventDetailsActivity : AppCompatActivity() {
                 .load(event.imageUri)
                 .into(binding.eventDetailsIMGEvent)
         }
+    }
+
+    private fun fetchEventById(eventId: String) {
+        db.collection("events")
+            .document(eventId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val event = document.toObject(Event::class.java)?.copy(id = document.id)
+
+                    if (event != null) {
+                        currentEvent = event
+                        bindEventData(event)
+                    } else {
+                        Toast.makeText(this, "Failed to load event data", Toast.LENGTH_SHORT).show()
+                        finish()
+                    }
+                } else {
+                    Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Error loading event", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+    }
+
+    private fun openNavigation(lat: Double, lng: Double) {
+        val uri = Uri.parse("geo:$lat,$lng?q=$lat,$lng")
+        val intent = Intent(Intent.ACTION_VIEW, uri)
+
+        val chooser = Intent.createChooser(intent, "Open with")
+        startActivity(chooser)
     }
 
     private fun updateJoinButton(event: Event) {
@@ -144,15 +190,7 @@ class EventDetailsActivity : AppCompatActivity() {
 
     }
 
-    private fun openNavigation(lat: Double, lng: Double) {
-        val uri = Uri.parse("geo:$lat,$lng?q=$lat,$lng")
-        val intent = Intent(Intent.ACTION_VIEW, uri)
-
-        val chooser = Intent.createChooser(intent, "Open with")
-        startActivity(chooser)
-    }
-
-    private fun joinEvent(event: Event,userId: String) {
+    private fun joinEvent(event: Event, userId: String) {
         if (event.maxParticipants != -1 && event.participants.size >= event.maxParticipants) {
             Toast.makeText(this, "Event is full", Toast.LENGTH_SHORT).show()
             return
@@ -167,6 +205,7 @@ class EventDetailsActivity : AppCompatActivity() {
                 currentEvent = event.copy(participants = updatedParticipants)
                 updateJoinButton(currentEvent!!)
                 Toast.makeText(this, "Joined successfully", Toast.LENGTH_SHORT).show()
+                fetchEventById(event.id)
             }
             .addOnFailureListener {
                 Toast.makeText(this, "Failed to join event", Toast.LENGTH_SHORT).show()
@@ -183,6 +222,7 @@ class EventDetailsActivity : AppCompatActivity() {
                 currentEvent = event.copy(participants = updatedParticipants)
                 updateJoinButton(currentEvent!!)
                 Toast.makeText(this, "Registration cancelled", Toast.LENGTH_SHORT).show()
+                fetchEventById(event.id)
             }
             .addOnFailureListener {
                 Toast.makeText(this, "Failed to cancel registration", Toast.LENGTH_SHORT).show()
