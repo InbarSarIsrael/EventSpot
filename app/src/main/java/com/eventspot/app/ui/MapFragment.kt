@@ -28,12 +28,10 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
 
     private var gMap: GoogleMap? = null
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-
     private lateinit var locationHelper: UserLocationHelper
-
     private val telAviv = LatLng(32.0853, 34.7818) // fallback
     private val defaultZoom = 13f
-    private val userZoom = 16f
+    private val userZoom = 13f
     private val db = FirebaseFirestore.getInstance()
 
     private val eventMarkers = mutableMapOf<String, Marker>()
