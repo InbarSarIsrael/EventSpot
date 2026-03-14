@@ -11,6 +11,7 @@ import com.eventspot.app.databinding.ActivityEventDetailsBinding
 import com.eventspot.app.model.Event
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -20,6 +21,8 @@ class EventDetailsActivity : AppCompatActivity() {
     private lateinit var binding: ActivityEventDetailsBinding
     private val db = FirebaseFirestore.getInstance()
     private var currentEvent: Event? = null
+
+    private var eventListener: ListenerRegistration? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,41 +62,6 @@ class EventDetailsActivity : AppCompatActivity() {
         }
     }
 
-//    private fun loadEventData() {
-//        val eventId = intent.getStringExtra("event_id")
-//
-//        if (eventId.isNullOrEmpty()) {
-//            Toast.makeText(this, "Event ID is missing", Toast.LENGTH_SHORT).show()
-//            finish()
-//            return
-//        }
-//
-//        db.collection("events")
-//            .document(eventId)
-//            .get()
-//            .addOnSuccessListener { document ->
-//                if (document.exists()) {
-//                    val event = document.toObject(Event::class.java)?.copy(id = document.id)
-//
-//                    if (event != null) {
-//                        currentEvent = event
-//                        bindEventData(event)
-//                    } else {
-//                        Toast.makeText(this, "Failed to load event data", Toast.LENGTH_SHORT).show()
-//                        finish()
-//                    }
-//                } else {
-//                    Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show()
-//                    finish()
-//                }
-//            }
-//            .addOnFailureListener { exception ->
-//                // Log.e("EventDetailsActivity", "Error loading event", exception)
-//                Toast.makeText(this, "Error loading event", Toast.LENGTH_SHORT).show()
-//                finish()
-//            }
-//    }
-
     private fun loadEventData() {
         val eventId = intent.getStringExtra("event_id")
 
@@ -103,7 +71,28 @@ class EventDetailsActivity : AppCompatActivity() {
             return
         }
 
-        fetchEventById(eventId)
+        eventListener = db.collection("events")
+            .document(eventId)
+            .addSnapshotListener { document, error ->
+                if (error != null) {
+                    Toast.makeText(this, "Error loading event", Toast.LENGTH_SHORT).show()
+                    return@addSnapshotListener
+                }
+
+                if (document != null && document.exists()) {
+                    val event = document.toObject(Event::class.java)?.copy(id = document.id)
+
+                    if (event != null) {
+                        currentEvent = event
+                        bindEventData(event)
+                    } else {
+                        Toast.makeText(this, "Failed to load event data", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            }
     }
 
     @SuppressLint("SetTextI18n")
@@ -127,32 +116,6 @@ class EventDetailsActivity : AppCompatActivity() {
                 .load(event.imageUri)
                 .into(binding.eventDetailsIMGEvent)
         }
-    }
-
-    private fun fetchEventById(eventId: String) {
-        db.collection("events")
-            .document(eventId)
-            .get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    val event = document.toObject(Event::class.java)?.copy(id = document.id)
-
-                    if (event != null) {
-                        currentEvent = event
-                        bindEventData(event)
-                    } else {
-                        Toast.makeText(this, "Failed to load event data", Toast.LENGTH_SHORT).show()
-                        finish()
-                    }
-                } else {
-                    Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show()
-                    finish()
-                }
-            }
-            .addOnFailureListener {
-                Toast.makeText(this, "Error loading event", Toast.LENGTH_SHORT).show()
-                finish()
-            }
     }
 
     private fun openNavigation(lat: Double, lng: Double) {
@@ -191,42 +154,52 @@ class EventDetailsActivity : AppCompatActivity() {
     }
 
     private fun joinEvent(event: Event, userId: String) {
-        if (event.maxParticipants != -1 && event.participants.size >= event.maxParticipants) {
-            Toast.makeText(this, "Event is full", Toast.LENGTH_SHORT).show()
-            return
+        val eventRef = db.collection("events").document(event.id)
+
+        // when 2 or more users try to join
+        db.runTransaction { transaction ->
+            val snapshot = transaction.get(eventRef)
+            val freshEvent = snapshot.toObject(Event::class.java)?.copy(id = snapshot.id)
+                ?: throw Exception("Failed to load event")
+
+            if (userId in freshEvent.participants) {
+                throw Exception("User already joined")
+            }
+
+            if (freshEvent.maxParticipants != -1 &&
+                freshEvent.participants.size >= freshEvent.maxParticipants
+            ) {
+                throw Exception("Event is full")
+            }
+
+            val updatedParticipants = freshEvent.participants + userId
+            transaction.update(eventRef, "participants", updatedParticipants)
+        }.addOnSuccessListener {
+            Toast.makeText(this, "Joined successfully", Toast.LENGTH_SHORT).show()
+        }.addOnFailureListener { e ->
+            Toast.makeText(this, e.message ?: "Failed to join event", Toast.LENGTH_SHORT).show()
         }
-
-        val updatedParticipants = event.participants + userId
-
-        db.collection("events")
-            .document(event.id)
-            .update("participants", updatedParticipants)
-            .addOnSuccessListener {
-                currentEvent = event.copy(participants = updatedParticipants)
-                updateJoinButton(currentEvent!!)
-                Toast.makeText(this, "Joined successfully", Toast.LENGTH_SHORT).show()
-                fetchEventById(event.id)
-            }
-            .addOnFailureListener {
-                Toast.makeText(this, "Failed to join event", Toast.LENGTH_SHORT).show()
-            }
     }
 
     private fun cancelJoin(event: Event, userId: String) {
-        val updatedParticipants = event.participants.filter { it != userId }
+        val eventRef = db.collection("events").document(event.id)
 
-        db.collection("events")
-            .document(event.id)
-            .update("participants", updatedParticipants)
-            .addOnSuccessListener {
-                currentEvent = event.copy(participants = updatedParticipants)
-                updateJoinButton(currentEvent!!)
-                Toast.makeText(this, "Registration cancelled", Toast.LENGTH_SHORT).show()
-                fetchEventById(event.id)
+        db.runTransaction { transaction ->
+            val snapshot = transaction.get(eventRef)
+            val freshEvent = snapshot.toObject(Event::class.java)?.copy(id = snapshot.id)
+                ?: throw Exception("Failed to load event")
+
+            if (userId !in freshEvent.participants) {
+                throw Exception("User is not registered")
             }
-            .addOnFailureListener {
-                Toast.makeText(this, "Failed to cancel registration", Toast.LENGTH_SHORT).show()
-            }
+
+            val updatedParticipants = freshEvent.participants.filter { it != userId }
+            transaction.update(eventRef, "participants", updatedParticipants)
+        }.addOnSuccessListener {
+            Toast.makeText(this, "Registration cancelled", Toast.LENGTH_SHORT).show()
+        }.addOnFailureListener { e ->
+            Toast.makeText(this, e.message ?: "Failed to cancel registration", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun formatDate(dateTimeMillis: Long): String {
@@ -237,5 +210,10 @@ class EventDetailsActivity : AppCompatActivity() {
     private fun formatTime(dateTimeMillis: Long): String {
         val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
         return sdf.format(Date(dateTimeMillis))
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        eventListener?.remove()
     }
 }
