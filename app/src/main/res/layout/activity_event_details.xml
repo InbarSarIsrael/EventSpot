@@ -52,12 +52,12 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Event name + navigate button row -->
+                <!-- Event name + action buttons row -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
                     <com.google.android.material.textview.MaterialTextView
                         android:id="@+id/eventDetails_LBL_name"
@@ -70,23 +70,27 @@
                         android:textStyle="bold"
                         tools:text="Event Name" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/eventDetails_BTN_navigate"
+                    <!-- Saved icon -->
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/eventDetails_BTN_saved"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
-                        android:layout_marginStart="12dp"
-                        android:backgroundTint="@color/black"
-                        app:backgroundTint="@color/black"
-                        android:insetTop="0dp"
-                        android:insetBottom="0dp"
-                        android:minWidth="40dp"
-                        android:minHeight="40dp"
-                        android:padding="0dp"
-                        app:icon="@drawable/ic_navigation"
-                        app:iconGravity="textStart"
-                        app:iconPadding="0dp"
-                        app:iconSize="20dp"
-                        app:strokeWidth="1dp" />
+                        android:layout_marginTop="0dp"
+                        android:layout_marginEnd="4dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="4dp"
+                        android:contentDescription="@string/save_event"
+                        app:srcCompat="@drawable/empty_save" />
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/eventDetails_BTN_navigate"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:layout_marginTop="0dp"
+                        android:layout_marginEnd="4dp"
+                        android:contentDescription="@string/navigation_event"
+                        app:srcCompat="@drawable/ic_navigation" />
                 </LinearLayout>
 
                 <!-- Producer -->

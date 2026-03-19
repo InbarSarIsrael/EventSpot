@@ -54,6 +54,40 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
+        <CheckBox
+            android:id="@+id/events_CB_available"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Available"
+            android:textColor="@color/black"
+            android:textSize="14sp"
+            android:buttonTint="@color/black"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/events_EDT_search"
+            app:layout_constraintBottom_toBottomOf="@id/events_BTN_dateFilter" />
+
+        <Button
+            android:id="@+id/events_BTN_dateFilter"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:text="Date"
+            android:textAllCaps="false"
+            app:layout_constraintEnd_toStartOf="@id/events_BTN_clearFilters"
+            app:layout_constraintTop_toBottomOf="@id/events_EDT_search" />
+
+        <Button
+            android:id="@+id/events_BTN_clearFilters"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_marginTop="8dp"
+            android:text="Clear"
+            android:textAllCaps="false"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/events_EDT_search" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.recyclerview.widget.RecyclerView
@@ -62,5 +96,16 @@
         android:layout_height="match_parent"
         android:layout_below="@id/events_header"
         android:layout_marginTop="16dp" />
+
+    <TextView
+        android:id="@+id/events_LBL_emptyState"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:text="@string/no_events_found"
+        android:textColor="@color/black"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
 
 </RelativeLayout>

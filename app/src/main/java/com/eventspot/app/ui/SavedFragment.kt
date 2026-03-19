@@ -1,60 +1,116 @@
 package com.eventspot.app.ui
 
+import android.app.AlertDialog
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.eventspot.app.R
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.lifecycle.lifecycleScope
+import com.eventspot.app.EventDetailsActivity
+import com.eventspot.app.adapters.EventAdapter
+import com.eventspot.app.databinding.FragmentSavedBinding
+import com.eventspot.app.repository.FirestoreEventRepository
+import com.eventspot.app.utilities.SavedEventsManager
+import kotlinx.coroutines.launch
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [SavedFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class SavedFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+    private var _binding: FragmentSavedBinding? = null
+    private val binding get() = _binding!!
+
+    private val eventRepository = FirestoreEventRepository()
+    private val savedEventsManager = SavedEventsManager()
+    private var savedEventIds: Set<String> = emptySet()
+    private lateinit var eventAdapter: EventAdapter
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentSavedBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        setupRecyclerView()
+        loadSavedEvents()
+    }
+
+    private fun setupRecyclerView() {
+        eventAdapter = EventAdapter(
+            onEventClick = { event ->
+                val intent = Intent(requireContext(), EventDetailsActivity::class.java).apply {
+                    putExtra("event_id", event.id)
+                }
+                startActivity(intent)
+            },
+            onSaveClick = { event ->
+                showRemoveSavedEventDialog(event.id)
+            }
+        )
+
+        binding.savedRVList.layoutManager = LinearLayoutManager(requireContext())
+        binding.savedRVList.adapter = eventAdapter
+        binding.savedRVList.setHasFixedSize(true)
+    }
+
+    private fun loadSavedEvents() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val events = eventRepository.getAllEvents()
+                savedEventIds = savedEventsManager.getSavedEventIds()
+
+                val savedEvents = events.filter { it.id in savedEventIds }
+
+                eventAdapter.submitList(savedEvents)
+                eventAdapter.updateSavedEventIds(savedEventIds)
+
+                updateEmptyState(savedEvents.isEmpty())
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_saved, container, false)
+    private fun showRemoveSavedEventDialog(eventId: String) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Remove this saved event?")
+            .setPositiveButton("Remove") { _, _ ->
+                toggleSavedEvent(eventId)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment SavedFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            SavedFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
+    private fun toggleSavedEvent(eventId: String) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                savedEventsManager.toggleSaved(eventId)
+                loadSavedEvents()
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
+        }
+    }
+
+    private fun updateEmptyState(isEmpty: Boolean) {
+        binding.savedTVEmpty.visibility = if (isEmpty) View.VISIBLE else View.GONE
+        binding.savedRVList.visibility = if (isEmpty) View.GONE else View.VISIBLE
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadSavedEvents()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

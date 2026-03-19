@@ -18,12 +18,19 @@ import java.util.Locale
 
 class EventAdapter(
     private val onEventClick: (Event) -> Unit,
+    private val onSaveClick: (Event) -> Unit
 ) : ListAdapter<Event, EventAdapter.EventViewHolder>(EventDiffCallback()) {
 
     private var userLocation: Location? = null
+    private var savedEventIds: Set<String> = emptySet()
 
     fun updateUserLocation(location: Location?) {
         userLocation = location
+        notifyDataSetChanged()
+    }
+
+    fun updateSavedEventIds(savedIds: Set<String>) {
+        savedEventIds = savedIds
         notifyDataSetChanged()
     }
 
@@ -51,13 +58,10 @@ class EventAdapter(
             binding.eventLBLAddress.text = event.address
             binding.eventLBLDesc.text = event.description
 
-            binding.eventIGMSaved.setImageResource(
-                if (event.isSaved) R.drawable.saved else R.drawable.empty_save
-            )
-
             bindImage(event.imageUri)
             bindDistance(event)
             bindCategories(event.categories)
+            bindSavedIcon(event)
 
             binding.root.setOnClickListener {
                 onEventClick(event)
@@ -111,6 +115,22 @@ class EventAdapter(
                     setEnsureMinTouchTargetSize(false)
                 }
                 binding.eventCHIPGROUPCategories.addView(chip)
+            }
+        }
+
+        private fun bindSavedIcon(event: Event) {
+            val isSaved = savedEventIds.contains(event.id)
+
+            val iconRes = if (isSaved) {
+                R.drawable.saved
+            } else {
+                R.drawable.empty_save
+            }
+
+            binding.eventBTNSaved.setImageResource(iconRes)
+
+            binding.eventBTNSaved.setOnClickListener {
+                onSaveClick(event)
             }
         }
 

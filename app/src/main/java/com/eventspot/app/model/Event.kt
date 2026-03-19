@@ -29,8 +29,6 @@ data class Event(
 
     val createdAt: Long = System.currentTimeMillis(), // Creation timestamp (used for "new events" sorting)
 
-    val isSaved: Boolean = false,   // True if the user marked it as saved
-
     val maxParticipants: Int = -1, // Max people in event
 
     val participants: List<String> = emptyList(), // List of participants

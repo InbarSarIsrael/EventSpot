@@ -2,6 +2,7 @@ package com.eventspot.app.repository
 
 import com.eventspot.app.model.Event
 import com.google.firebase.Firebase
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
 class FirestoreEventRepository {
@@ -31,7 +32,6 @@ class FirestoreEventRepository {
                 lng = 34.77975831951985,
                 imageUri = "https://static.wixstatic.com/media/740c76_373359e8e9f149a5a020c37c10fdb49b~mv2.jpg/v1/fill/w_640,h_422,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/740c76_373359e8e9f149a5a020c37c10fdb49b~mv2.jpg",
                 dateTimeMillis = now,
-                isSaved = false,
                 maxParticipants = -1
             ),
             Event(
@@ -45,7 +45,6 @@ class FirestoreEventRepository {
                 lng = 34.787168920911284,
                 imageUri = "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/19/fb/18/d0/sarona-market.jpg?w=1200&h=-1&s=1",
                 dateTimeMillis = now,
-                isSaved = false,
                 maxParticipants = -1
             ),
             Event(
@@ -59,7 +58,6 @@ class FirestoreEventRepository {
                 lng = 34.77361344848735,
                 imageUri = "https://images.stockcake.com/public/7/e/c/7eccaeb1-9d8d-4b1f-a08e-0d9cea534390_large/sunset-yoga-meditation-stockcake.jpg",
                 dateTimeMillis = now,
-                isSaved = false,
                 maxParticipants = 1
             ),
             Event(
@@ -73,7 +71,6 @@ class FirestoreEventRepository {
                 lng = 34.792202797252116,
                 imageUri = "https://static.vecteezy.com/system/resources/thumbnails/074/178/701/small/a-full-red-and-white-striped-container-filled-with-fluffy-popcorn-photo.jpg",
                 dateTimeMillis = now,
-                isSaved = false,
                 maxParticipants = 30
             )
         )
@@ -83,7 +80,7 @@ class FirestoreEventRepository {
         dummyEvents.forEach { event ->
             val docRef = eventsCollection.document()
             val eventWithId = event.copy(id = docRef.id)
-            docRef.set(eventWithId)
+            batch.set(docRef, eventWithId)
         }
 
         batch.commit().await()
@@ -95,5 +92,19 @@ class FirestoreEventRepository {
             .await()
 
         return snapshot.toObjects(Event::class.java)
+    }
+
+    fun observeEvents(onEventsChanged: (List<Event>) -> Unit): ListenerRegistration {
+        return eventsCollection.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                error.printStackTrace()
+                return@addSnapshotListener
+            }
+
+            if (snapshot != null) {
+                val events = snapshot.toObjects(Event::class.java)
+                onEventsChanged(events)
+            }
+        }
     }
 }

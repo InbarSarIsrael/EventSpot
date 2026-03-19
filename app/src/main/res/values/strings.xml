@@ -32,4 +32,11 @@
     <string name="discover_events_near_you">Discover events near you</string>
     <string name="event_address">Event address</string>
     <string name="event_title">Event title</string>
+    <string name="save_event">Save event</string>
+    <string name="navigation_event">Navigation event</string>
+    <string name="saved_events">Saved Events</string>
+    <string name="no_saved_events_yet">No saved events yet</string>
+    <string name="no_events_found">No events found</string>
+    <string name="available_only">Available only</string>
+    <string name="select_date">Select date</string>
 </resources>

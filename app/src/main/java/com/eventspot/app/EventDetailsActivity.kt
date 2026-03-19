@@ -6,12 +6,16 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.eventspot.app.databinding.ActivityEventDetailsBinding
 import com.eventspot.app.model.Event
+import com.eventspot.app.repository.FirestoreUserRepository
+import com.eventspot.app.utilities.SavedEventsManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -20,6 +24,9 @@ class EventDetailsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityEventDetailsBinding
     private val db = FirebaseFirestore.getInstance()
+    private val savedEventsManager = SavedEventsManager()
+    private var isSaved = false
+
     private var currentEvent: Event? = null
 
     private var eventListener: ListenerRegistration? = null
@@ -30,9 +37,11 @@ class EventDetailsActivity : AppCompatActivity() {
         binding = ActivityEventDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        updateSavedButton()
         setupBackButton()
         setupNavigateButton()
         setupJoinButton()
+        setupSaveButton()
         loadEventData()
     }
 
@@ -59,6 +68,13 @@ class EventDetailsActivity : AppCompatActivity() {
             } else {
                 joinEvent(event, userId)
             }
+        }
+    }
+
+    private fun setupSaveButton() {
+        binding.eventDetailsBTNSaved.setOnClickListener {
+            val event = currentEvent ?: return@setOnClickListener
+            toggleSaveEvent(event.id)
         }
     }
 
@@ -110,6 +126,7 @@ class EventDetailsActivity : AppCompatActivity() {
             if (event.lat == 0.0 && event.lng == 0.0) android.view.View.INVISIBLE else android.view.View.VISIBLE
 
         updateJoinButton(event)
+        checkIfEventSaved(event.id)
 
         if (event.imageUri.isNotEmpty()) {
             Glide.with(this)
@@ -153,6 +170,15 @@ class EventDetailsActivity : AppCompatActivity() {
 
     }
 
+    private fun updateSavedButton() {
+        val iconRes = if (isSaved) {
+            R.drawable.saved
+        } else {
+            R.drawable.empty_save
+        }
+
+        binding.eventDetailsBTNSaved.setImageResource(iconRes)
+    }
     private fun joinEvent(event: Event, userId: String) {
         val eventRef = db.collection("events").document(event.id)
 
@@ -199,6 +225,35 @@ class EventDetailsActivity : AppCompatActivity() {
             Toast.makeText(this, "Registration cancelled", Toast.LENGTH_SHORT).show()
         }.addOnFailureListener { e ->
             Toast.makeText(this, e.message ?: "Failed to cancel registration", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun toggleSaveEvent(eventId: String) {
+        lifecycleScope.launch {
+            try {
+                isSaved = savedEventsManager.toggleSaved(eventId)
+                updateSavedButton()
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@EventDetailsActivity,
+                    "Failed to update saved event",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+    private fun checkIfEventSaved(eventId: String) {
+        lifecycleScope.launch {
+            try {
+                isSaved = savedEventsManager.isEventSaved(eventId)
+                updateSavedButton()
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@EventDetailsActivity,
+                    "Failed to check saved state",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 
