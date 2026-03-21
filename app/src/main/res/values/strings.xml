@@ -39,4 +39,13 @@
     <string name="no_events_found">No events found</string>
     <string name="available_only">Available only</string>
     <string name="select_date">Select date</string>
+    <string name="discover_events_save_your_favorites_and_join_activities">Discover events, save your favorites, and join activities</string>
+    <string name="producer2">Producer</string>
+    <string name="includes_all_user_features_with_the_ability_to_create_edit_and_delete_your_own_events">Includes all User features, with the ability to create, edit, and delete your own events</string>
+    <string name="continue2">Continue</string>
+    <string name="choose_your_role">Choose Your Role</string>
+    <string name="select_how_you_want_to_use_eventspot">Select how you want to use EventSpot</string>
+    <string name="event_explorer">Event Explorer</string>
+    <string name="profile2">Profile</string>
+    <string name="logout">logout</string>
 </resources>

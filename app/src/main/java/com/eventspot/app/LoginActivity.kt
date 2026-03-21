@@ -7,13 +7,20 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
+import com.eventspot.app.repository.FirestoreUserRepository
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
+
+    private val userRepository = FirestoreUserRepository()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -23,12 +30,15 @@ class LoginActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
+        val currentUser = FirebaseAuth.getInstance().currentUser
+
         // If no user is currently signed in, launch sign-in flow
-        if(FirebaseAuth.getInstance().currentUser == null) {
+        if(currentUser == null) {
             signIn()
         }
         else{
-            transactToMainActivity()
+            createUserAndNavigate(currentUser)
         }
     }
 
@@ -36,7 +46,7 @@ class LoginActivity : AppCompatActivity() {
     private val signInLauncher = registerForActivityResult(
         FirebaseAuthUIActivityResultContract(),
     ) { res ->
-        this.onSignInResult(res)
+        onSignInResult(res)
 
     }
 
@@ -54,29 +64,61 @@ class LoginActivity : AppCompatActivity() {
             .setLogo(R.drawable.background_photo) // Optional app logo in sign-in screen
             .setTheme(R.style.LoginTheme) // Optional theme for styling
             .build()
+
         signInLauncher.launch(signInIntent)
     }
 
     private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult) {
-        val response = result.idpResponse
         if (result.resultCode == RESULT_OK) {
-            // Successfully signed in
             val user = FirebaseAuth.getInstance().currentUser
-            transactToMainActivity()
+
+            if (user != null) {
+                createUserAndNavigate(user)
+            } else {
+                Toast.makeText(
+                    this,
+                    "Error: user is null after login",
+                    Toast.LENGTH_LONG
+                ).show()
+                signIn()
+            }
         } else {
-            // Sign in failed.
-            Toast
-                .makeText(this,
-                    "Error: Failed Logging in",
-                    Toast.LENGTH_LONG)
-                .show()
-            signIn() // Retry sign-in
+            Toast.makeText(
+                this,
+                "Error: failed logging in",
+                Toast.LENGTH_LONG
+            ).show()
+            signIn()
         }
     }
 
-    // Navigates to the MainActivity and finishes the login screen
-    private fun transactToMainActivity(){
-        startActivity(Intent(this, MainActivity::class.java))
-        finish()
+
+
+    private fun createUserAndNavigate(user: FirebaseUser) {
+        lifecycleScope.launch {
+            try {
+                userRepository.createUserIfNotExists(
+                    userId = user.uid,
+                    email = user.email ?: "",
+                    name = user.displayName ?: ""
+                )
+
+                val hasRole = userRepository.hasUserRole(user.uid)
+
+                if (hasRole) {
+                    startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                } else {
+                    startActivity(Intent(this@LoginActivity, ChooseRoleActivity::class.java))
+                }
+
+                finish()
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@LoginActivity,
+                    "Error saving user data: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
     }
 }

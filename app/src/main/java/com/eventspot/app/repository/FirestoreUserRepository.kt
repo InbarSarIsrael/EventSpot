@@ -1,5 +1,6 @@
 package com.eventspot.app.repository
 
+import com.eventspot.app.model.UserRole
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
@@ -7,6 +8,44 @@ import kotlinx.coroutines.tasks.await
 class FirestoreUserRepository {
     private val db = Firebase.firestore
     private val usersCollection = db.collection("users")
+
+
+
+    suspend fun createUserIfNotExists(userId: String, email: String, name: String) {
+        val userDoc = usersCollection.document(userId).get().await()
+
+        if (!userDoc.exists()) {
+            val userData = hashMapOf(
+                "userId" to userId,
+                "email" to email,
+                "name" to name,
+                "createdAt" to System.currentTimeMillis(),
+                "role" to null
+            )
+
+            usersCollection
+                .document(userId)
+                .set(userData)
+                .await()
+        }
+    }
+
+    suspend fun hasUserRole(userId: String): Boolean {
+        val userDoc = usersCollection
+            .document(userId)
+            .get()
+            .await()
+
+        val role = userDoc.getString("role")
+        return !role.isNullOrBlank() // false if null
+    }
+
+    suspend fun saveUserRole(userId: String, role: UserRole) {
+        usersCollection
+            .document(userId)
+            .update("role", role.name)
+            .await()
+    }
 
     suspend fun saveEvent(userId: String, eventId: String) {
         val savedEventData = hashMapOf(

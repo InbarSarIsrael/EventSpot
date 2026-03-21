@@ -15,9 +15,11 @@
         android:supportsRtl="false"
         android:theme="@style/Theme.EventSpot">
         <activity
-            android:name=".MainActivity"
+            android:name=".ChooseRoleActivity"
             android:exported="false" />
-        <!-- Google Maps API Key -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" /> <!-- Google Maps API Key -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
