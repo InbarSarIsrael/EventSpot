@@ -63,6 +63,10 @@ dependencies {
     // Firebase firestore & storage
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
+
     // for await function
     implementation(libs.coroutines.play.services)
+
+    // Google Place Autocomplete
+    implementation(libs.places)
 }

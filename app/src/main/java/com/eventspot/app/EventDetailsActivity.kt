@@ -115,7 +115,7 @@ class EventDetailsActivity : AppCompatActivity() {
     private fun bindEventData(event: Event) {
         binding.eventDetailsLBLName.text = event.name
         binding.eventDetailsLBLProducer.text = "Producer: ${event.producer}"
-        binding.eventDetailsLBLLocation.text = "Address: ${event.address}"
+        binding.eventDetailsLBLAddress.text = "Address: ${event.address}"
         binding.eventDetailsLBLDescription.text = event.description
         binding.eventDetailsLBLCategories.text =
             "Categories: ${event.categories.joinToString(", ")}"

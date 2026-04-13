@@ -69,11 +69,13 @@ class EventAdapter(
         }
 
         private fun bindImage(imageUrl: String) {
-            val imageSource = imageUrl.ifBlank {
-                R.drawable.unavailable_photo
+            if (imageUrl == "unavailable_photo") {
+                binding.eventIMG.setImageResource(R.drawable.unavailable_photo)
+                return
             }
+
             Glide.with(binding.eventIMG.context)
-                .load(imageSource)
+                .load(imageUrl)
                 .centerCrop()
                 .placeholder(R.drawable.unavailable_photo)
                 .error(R.drawable.unavailable_photo)

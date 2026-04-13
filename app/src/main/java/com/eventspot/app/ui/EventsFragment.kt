@@ -33,16 +33,12 @@ class EventsFragment : Fragment() {
 
     private var _binding: FragmentEventsBinding? = null
     private val binding get() = _binding!!
-
     private val eventRepository = FirestoreEventRepository()
     private val savedEventsManager = SavedEventsManager()
     private var savedEventIds: Set<String> = emptySet()
     private lateinit var eventAdapter: EventAdapter
-
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-
     private lateinit var locationHelper: UserLocationHelper
-
     private var allEvents: List<Event> = emptyList()
     private var filteredEvents: List<Event> = emptyList()
     private var eventsListener: ListenerRegistration? = null

@@ -19,7 +19,6 @@
     <string name="producer">Producer:</string>
     <string name="event_name">Event Name</string>
     <string name="time">Time:</string>
-    <string name="location">Location:</string>
     <string name="categories">Categories:</string>
     <string name="description">Description</string>
     <string name="event_description">Event description</string>
@@ -48,4 +47,18 @@
     <string name="event_explorer">Event Explorer</string>
     <string name="profile2">Profile</string>
     <string name="logout">logout</string>
+    <string name="add">add</string>
+    <string name="upload_image">upload image</string>
+    <string name="address">Address:</string>
+    <string name="description2">Description</string>
+    <string name="address2">Address</string>
+    <string name="event_name2">*Event name</string>
+    <string name="choose_category">Choose category</string>
+    <string name="categories_hint">You can choose up to 3 categories</string>
+    <string name="date_and_time">Date and time</string>
+    <string name="date_time_hint">Choose a future date and time</string>
+    <string name="address_hint">Tap to search for a place on the map</string>
+    <string name="max_participants">Max participants</string>
+    <string name="max_participants_hint">Optional. Leave empty for no participant limit</string>
+    <string name="add_event">Add Event</string>
 </resources>

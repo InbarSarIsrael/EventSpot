@@ -69,6 +69,8 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult) {
+        val response = result.idpResponse
+
         if (result.resultCode == RESULT_OK) {
             val user = FirebaseAuth.getInstance().currentUser
 
@@ -77,18 +79,24 @@ class LoginActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(
                     this,
-                    "Error: user is null after login",
+                    "Login completed but user is null",
                     Toast.LENGTH_LONG
                 ).show()
-                signIn()
             }
         } else {
-            Toast.makeText(
-                this,
-                "Error: failed logging in",
-                Toast.LENGTH_LONG
-            ).show()
-            signIn()
+            if (response == null) {
+                Toast.makeText(
+                    this,
+                    "Login cancelled by user",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                Toast.makeText(
+                    this,
+                    "Login failed: ${response.error?.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
         }
     }
 

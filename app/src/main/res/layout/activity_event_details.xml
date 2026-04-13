@@ -126,16 +126,16 @@
                     android:textColor="@android:color/black"
                     tools:text="Time: 20:00" />
 
-                <!-- Location -->
+                <!-- Address -->
                 <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/eventDetails_LBL_location"
+                    android:id="@+id/eventDetails_LBL_address"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="@string/location"
+                    android:text="@string/address"
                     android:textSize="16sp"
                     android:textColor="@android:color/black"
-                    tools:text="Location: Rothschild Blvd, Tel Aviv" />
+                    tools:text="Address: Rothschild Blvd, Tel Aviv" />
 
                 <!-- Categories -->
                 <com.google.android.material.textview.MaterialTextView

@@ -15,6 +15,10 @@
         android:supportsRtl="false"
         android:theme="@style/Theme.EventSpot">
         <activity
+            android:name=".AddActivity"
+            android:windowSoftInputMode="adjustPan"
+            android:exported="false" />
+        <activity
             android:name=".ChooseRoleActivity"
             android:exported="false" />
         <activity
@@ -32,7 +36,6 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

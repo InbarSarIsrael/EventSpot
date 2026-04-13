@@ -40,14 +40,14 @@ class EventInfoWindowAdapter(
         titleView.text = event?.name ?: marker.title ?: "Event"
         addressView.text = event?.address ?: marker.snippet ?: ""
 
-        if (!event?.imageUri.isNullOrBlank()) {
+        if (event?.imageUri == null || event.imageUri == "unavailable_photo") {
+            imageView.setImageResource(R.drawable.unavailable_photo)
+        } else {
             Glide.with(view.context)
                 .load(event.imageUri)
                 .placeholder(R.drawable.unavailable_photo)
                 .error(R.drawable.unavailable_photo)
                 .into(imageView)
-        } else {
-            imageView.setImageResource(R.drawable.unavailable_photo)
         }
     }
 }

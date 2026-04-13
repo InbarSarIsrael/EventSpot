@@ -16,8 +16,13 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import com.eventspot.app.AddActivity
 import com.eventspot.app.EventDetailsActivity
 import com.eventspot.app.adapters.EventInfoWindowAdapter
+import com.eventspot.app.databinding.FragmentEventsBinding
+import com.eventspot.app.databinding.FragmentMapBinding
 import com.eventspot.app.utilities.UserLocationHelper
 import com.google.firebase.firestore.FirebaseFirestore
 import com.eventspot.app.model.Event
@@ -26,6 +31,8 @@ import com.google.android.gms.maps.model.Marker
 
 class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
 
+    private var _binding: FragmentMapBinding? = null
+    private val binding get() = _binding!!
     private var gMap: GoogleMap? = null
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationHelper: UserLocationHelper
@@ -33,7 +40,6 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
     private val defaultZoom = 13f
     private val userZoom = 13f
     private val db = FirebaseFirestore.getInstance()
-
     private val eventMarkers = mutableMapOf<String, Marker>()
     private val eventsById = mutableMapOf<String, Event>()
     private val requestLocationPermission =
@@ -45,6 +51,15 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
             }
         }
 
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentMapBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -55,6 +70,14 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
             .findFragmentById(R.id.map_container) as SupportMapFragment
 
         mapFragment.getMapAsync(this)
+
+        setupAddButton()
+    }
+
+    private fun setupAddButton() {
+        binding.mapBTNAdd.setOnClickListener {
+            startActivity(Intent(requireContext(), AddActivity::class.java))
+        }
     }
 
     override fun onMapReady(map: GoogleMap) {
