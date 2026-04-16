@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "892298434061-9i1s9rpnu9rai9p0dhn00lo13bsg0hga.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.eventspot.app",
+            "certificate_hash": "e29060af3edc3e304821aabc3415203c67d81411"
+          }
+        },
+        {
           "client_id": "892298434061-gcemau0hhtobsvcm0dhaqk2u0vbeomrr.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

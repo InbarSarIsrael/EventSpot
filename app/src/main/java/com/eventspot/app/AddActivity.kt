@@ -10,19 +10,21 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
 import com.eventspot.app.databinding.ActivityAddBinding
 import com.eventspot.app.model.Event
+import com.eventspot.app.model.EventSource
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.widget.Autocomplete
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
 import com.google.android.material.chip.Chip
+import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-import java.util.UUID
 
 
 class AddActivity : AppCompatActivity() {
@@ -53,11 +55,25 @@ class AddActivity : AppCompatActivity() {
         "Workshop", "Networking", "Technology", "Business",
         "Sports", "Fitness", "Outdoor", "Family"
     )
+    private var isSubmitting = false
+    private var isEditMode = false
+    private var editingEventId: String? = null
+    private var existingImageUri: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAddBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        editingEventId = intent.getStringExtra("event_id")
+        isEditMode = editingEventId != null
+
+        if (isEditMode) {
+            binding.addEventBtn.text = "Update Event"
+            loadEventForEditing()
+        } else {
+            binding.addEventBtn.text = "Add Event"
+        }
 
         if (!Places.isInitialized()) {
             Places.initialize(applicationContext, getString(R.string.google_maps_key))
@@ -223,6 +239,8 @@ class AddActivity : AppCompatActivity() {
     private fun setupAddButton() {
         binding.addEventBtn.setOnClickListener {
 
+            if (isSubmitting) return@setOnClickListener
+
             val eventName = binding.addEDTName.text.toString().trim()
             if (eventName.isEmpty()) {
                 binding.addEDTName.error = "Event name is required"
@@ -231,7 +249,8 @@ class AddActivity : AppCompatActivity() {
             }
 
             if (selectedCategories.isEmpty()) {
-                Toast.makeText(this, "Please choose at least one category", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Please choose at least one category", Toast.LENGTH_SHORT)
+                    .show()
                 return@setOnClickListener
             }
 
@@ -250,34 +269,160 @@ class AddActivity : AppCompatActivity() {
             val lat = selectedLat ?: return@setOnClickListener
             val lng = selectedLng ?: return@setOnClickListener
 
-            uploadImageToFirebase { imageUri ->
+            setLoadingState(true)
 
-                val db = FirebaseFirestore.getInstance()
-                val eventRef = db.collection("events").document()
+            saveEvent(
+                eventName = eventName, dateTimeMillis = dateTimeMillis, address = address,
+                lat = lat, lng = lng, maxParticipants = maxParticipants)
+        }
+    }
 
-                val event = Event(
-                    id = eventRef.id,
-                    name = eventName,
-                    dateTimeMillis = dateTimeMillis,
-                    address = address,
-                    description = binding.addEDTDescription.text.toString().trim(),
-                    categories = selectedCategories,
-                    lat = lat,
-                    lng = lng,
-                    maxParticipants = maxParticipants,
-                    imageUri = imageUri ?: "unavailable_photo"
-                )
+    private fun saveEvent(eventName: String, dateTimeMillis: Long, address: String,
+                          lat: Double, lng: Double, maxParticipants: Int) {
+        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: run {
+            setLoadingState(false)
+            return
+        }
 
-                eventRef.set(event)
-                    .addOnSuccessListener {
-                        Toast.makeText(this, "Event added!", Toast.LENGTH_SHORT).show()
-                        finish()
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("users")
+            .document(currentUserId)
+            .get()
+            .addOnSuccessListener { userDocument ->
+                val producerName = userDocument.getString("name").orEmpty()
+
+                if (selectedImageUri != null) {
+                    uploadImageToFirebase { uploadedImageUri ->
+                        val finalImageUri = uploadedImageUri ?: existingImageUri ?: "unavailable_photo"
+
+                        saveEventToFirestore(
+                            db = db, currentUserId = currentUserId, producerName = producerName,
+                            eventName = eventName, dateTimeMillis = dateTimeMillis, address = address,
+                            lat = lat, lng = lng, maxParticipants = maxParticipants, finalImageUri = finalImageUri)
                     }
-                    .addOnFailureListener {
-                        Toast.makeText(this, "Failed to add event", Toast.LENGTH_SHORT).show()
-                    }
+                } else {
+                    val finalImageUri = existingImageUri ?: "unavailable_photo"
+
+                    saveEventToFirestore(
+                        db = db, currentUserId = currentUserId, producerName = producerName,
+                        eventName = eventName, dateTimeMillis = dateTimeMillis, address = address,
+                        lat = lat, lng = lng, maxParticipants = maxParticipants, finalImageUri = finalImageUri)
+                }
             }
+            .addOnFailureListener {
+                setLoadingState(false)
+                Toast.makeText(this, "Failed to load producer name", Toast.LENGTH_SHORT).show()
+            }
+    }
 
+    private fun saveEventToFirestore(
+        db: FirebaseFirestore, currentUserId: String, producerName: String,
+        eventName: String, dateTimeMillis: Long, address: String,
+        lat: Double, lng: Double, maxParticipants: Int, finalImageUri: String) {
+
+        val documentRef = if (isEditMode) {
+            db.collection("events").document(editingEventId!!)
+        } else {
+            db.collection("events").document()
+        }
+
+        val event = Event(
+            id = documentRef.id,
+            producerId = currentUserId,
+            imageUri = finalImageUri,
+            name = eventName,
+            producer = producerName,
+            dateTimeMillis = dateTimeMillis,
+            address = address,
+            description = binding.addEDTDescription.text.toString().trim(),
+            categories = selectedCategories.toList(),
+            lat = lat,
+            lng = lng,
+            source = EventSource.USER,
+            maxParticipants = maxParticipants,
+            participants = emptyList()
+        )
+
+        documentRef.set(event)
+            .addOnSuccessListener {
+                Toast.makeText(
+                    this,
+                    if (isEditMode) "Event updated!" else "Event added!",
+                    Toast.LENGTH_SHORT
+                ).show()
+                finish()
+            }
+            .addOnFailureListener {
+                setLoadingState(false)
+                Toast.makeText(
+                    this,
+                    if (isEditMode) "Failed to update event" else "Failed to add event",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+    }
+
+    private fun loadEventForEditing() {
+        val eventId = editingEventId ?: return
+
+        FirebaseFirestore.getInstance()
+            .collection("events")
+            .document(eventId)
+            .get()
+            .addOnSuccessListener { document ->
+                val event = document.toObject(Event::class.java) ?: return@addOnSuccessListener
+
+                binding.addEDTName.setText(event.name)
+                binding.addEDTDescription.setText(event.description)
+                binding.addEDTAddress.setText(event.address)
+
+                if (event.maxParticipants != -1) {
+                    binding.addEDTMaxParticipants.setText(event.maxParticipants.toString())
+                }
+
+                selectedDateTimeMillis = event.dateTimeMillis
+                selectedAddress = event.address
+                selectedLat = event.lat
+                selectedLng = event.lng
+                existingImageUri = event.imageUri
+
+                val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                binding.addEDTDateAndTime.setText(formatter.format(event.dateTimeMillis))
+
+                selectedCategories.clear()
+                binding.addChipGroupCategories.removeAllViews()
+                event.categories.forEach { category ->
+                    selectedCategories.add(category)
+                    addCategoryChip(category)
+                }
+
+                if (event.imageUri.isNotBlank() && event.imageUri != "unavailable_photo") {
+                    Glide.with(this)
+                        .load(event.imageUri)
+                        .centerCrop()
+                        .placeholder(R.drawable.unavailable_photo)
+                        .error(R.drawable.unavailable_photo)
+                        .into(binding.addIMG)
+
+                    binding.addUploadText.visibility = View.GONE
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to load event", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+    }
+
+    private fun setLoadingState(isLoading: Boolean) {
+        isSubmitting = isLoading
+        binding.addEventBtn.isEnabled = !isLoading
+
+        binding.addEventBtn.text = when {
+            isLoading && isEditMode -> "Updating..."
+            isLoading -> "Adding..."
+            isEditMode -> "Update Event"
+            else -> "Add Event"
         }
     }
 

@@ -7,6 +7,8 @@ enum class EventSource {
 data class Event(
     val id: String = "",                    // Unique ID of the event (used for update/delete in DB)
 
+    val producerId: String = "",
+
     val imageUri: String = "",              // URL of the event image (Firebase Storage or external API)
 
     val name: String = "",                  // Event title

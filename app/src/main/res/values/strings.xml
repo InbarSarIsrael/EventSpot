@@ -61,4 +61,6 @@
     <string name="max_participants">Max participants</string>
     <string name="max_participants_hint">Optional. Leave empty for no participant limit</string>
     <string name="add_event">Add Event</string>
+    <string name="edit_event">edit event</string>
+    <string name="delete_event">delete event</string>
 </resources>

@@ -28,6 +28,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.eventspot.app.model.Event
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.Marker
+import com.google.firebase.auth.FirebaseAuth
 
 class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
 
@@ -40,6 +41,8 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
     private val defaultZoom = 13f
     private val userZoom = 13f
     private val db = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
+
     private val eventMarkers = mutableMapOf<String, Marker>()
     private val eventsById = mutableMapOf<String, Event>()
     private val requestLocationPermission =
@@ -74,10 +77,28 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
         setupAddButton()
     }
 
+
     private fun setupAddButton() {
-        binding.mapBTNAdd.setOnClickListener {
-            startActivity(Intent(requireContext(), AddActivity::class.java))
-        }
+        binding.mapBTNAdd.visibility = View.GONE
+
+        val currentUserId = auth.currentUser?.uid ?: return
+
+        db.collection("users")
+            .document(currentUserId)
+            .get()
+            .addOnSuccessListener { userDocument ->
+                val role = userDocument.getString("role").orEmpty()
+
+                if (role == "PRODUCER") {
+                    binding.mapBTNAdd.visibility = View.VISIBLE
+                    binding.mapBTNAdd.setOnClickListener {
+                        startActivity(Intent(requireContext(), AddActivity::class.java))
+                    }
+                }
+            }
+            .addOnFailureListener {
+                binding.mapBTNAdd.visibility = View.GONE
+            }
     }
 
     override fun onMapReady(map: GoogleMap) {

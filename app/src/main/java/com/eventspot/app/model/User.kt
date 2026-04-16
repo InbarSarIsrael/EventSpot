@@ -6,8 +6,8 @@ enum class UserRole {
 }
 
 data class User(
-    val uid: String = "",
-    val fullName: String = "",
     val email: String = "",
-    val role: UserRole = UserRole.EVENT_EXPLORER
+    val name: String = "",
+    val role: UserRole = UserRole.EVENT_EXPLORER,
+    val userId: String = ""
 )

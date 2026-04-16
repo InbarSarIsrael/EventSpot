@@ -90,4 +90,19 @@ class FirestoreUserRepository {
 
         return snapshot.documents.map { it.id }
     }
+
+    suspend fun getUserRole(userId: String): UserRole? {
+        val userDoc = usersCollection
+            .document(userId)
+            .get()
+            .await()
+
+        val role = userDoc.getString("role") ?: return null
+
+        return try {
+            UserRole.valueOf(role)
+        } catch (_: IllegalArgumentException) {
+            null
+        }
+    }
 }
