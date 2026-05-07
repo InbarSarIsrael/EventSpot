@@ -1,9 +1,12 @@
 package com.eventspot.app.repository
 
+import com.eventspot.app.model.NotificationPreferences
+import com.eventspot.app.model.User
 import com.eventspot.app.model.UserRole
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
+import java.security.MessageDigest
 
 class FirestoreUserRepository {
     private val db = Firebase.firestore
@@ -15,17 +18,17 @@ class FirestoreUserRepository {
         val userDoc = usersCollection.document(userId).get().await()
 
         if (!userDoc.exists()) {
-            val userData = hashMapOf(
-                "userId" to userId,
-                "email" to email,
-                "name" to name,
-                "createdAt" to System.currentTimeMillis(),
-                "role" to null
+            val user = User(
+                email = email,
+                name = name,
+                role = null,
+                userId = userId,
+                notificationPreferences = NotificationPreferences()
             )
 
             usersCollection
                 .document(userId)
-                .set(userData)
+                .set(user)
                 .await()
         }
     }
@@ -104,5 +107,33 @@ class FirestoreUserRepository {
         } catch (_: IllegalArgumentException) {
             null
         }
+    }
+
+    suspend fun saveFcmToken(userId: String, token: String) {
+        val tokenData = hashMapOf(
+            "token" to token,
+            "updatedAt" to System.currentTimeMillis()
+        )
+
+        usersCollection
+            .document(userId)
+            .collection("fcmTokens")
+            .document(token.toStableDocumentId())
+            .set(tokenData)
+            .await()
+    }
+
+    suspend fun deleteFcmToken(userId: String, token: String) {
+        usersCollection
+            .document(userId)
+            .collection("fcmTokens")
+            .document(token.toStableDocumentId())
+            .delete()
+            .await()
+    }
+
+    private fun String.toStableDocumentId(): String {
+        val bytes = MessageDigest.getInstance("SHA-256").digest(toByteArray())
+        return bytes.joinToString("") { "%02x".format(it) }
     }
 }

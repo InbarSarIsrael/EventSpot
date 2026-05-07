@@ -62,6 +62,7 @@ dependencies {
 
     // Firebase firestore & storage
     implementation(libs.firebase.firestore)
+    implementation(libs.firebase.messaging)
     implementation(libs.firebase.storage)
 
     // for await function

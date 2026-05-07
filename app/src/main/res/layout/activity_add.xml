@@ -123,6 +123,33 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
+            android:id="@+id/add_TXT_endDateTimeHint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/optional_choose_when_the_event_ends"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="12sp" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/add_LBL_EndDateAndTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            app:boxStrokeColor="@color/black"
+            app:hintTextColor="@color/black">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/add_EDT_EndDateAndTime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="false"
+                android:hint="@string/end_date_and_time"
+                android:textColor="@color/black" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
             android:id="@+id/add_TXT_addressHint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

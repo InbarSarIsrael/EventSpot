@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.eventspot.app.AddActivity
 import com.eventspot.app.EventDetailsActivity
 import com.eventspot.app.LoginActivity
+import com.eventspot.app.SettingsActivity
 import com.eventspot.app.adapters.ProfileEventAdapter
 import com.eventspot.app.databinding.FragmentProfileBinding
 import com.eventspot.app.model.Event
@@ -23,7 +24,10 @@ import com.eventspot.app.repository.FirestoreUserRepository
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class ProfileFragment : Fragment() {
 
@@ -58,7 +62,8 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupClickButton()
+        setupLogoutButton()
+        setupSettingsButton()
         setupRecyclerViews()
         setupSectionClicks()
         loadUserRole()
@@ -221,6 +226,7 @@ class ProfileFragment : Fragment() {
             .document(event.id)
             .delete()
             .addOnSuccessListener {
+                deleteEventImageFromStorage(event.imageUri)
                 loadUserRole()
             }
             .addOnFailureListener {
@@ -228,7 +234,29 @@ class ProfileFragment : Fragment() {
             }
     }
 
-    private fun setupClickButton() {
+    private fun deleteEventImageFromStorage(imageUri: String) {
+        if (!isFirebaseStorageImage(imageUri)) return
+
+        try {
+            FirebaseStorage.getInstance()
+                .getReferenceFromUrl(imageUri)
+                .delete()
+                .addOnFailureListener {
+                    Log.e("ProfileFragment", "Failed to delete event image from storage", it)
+                }
+        } catch (e: IllegalArgumentException) {
+            Log.e("ProfileFragment", "Invalid Firebase Storage image URL", e)
+        }
+    }
+
+    private fun isFirebaseStorageImage(imageUri: String): Boolean {
+        return imageUri.isNotBlank() &&
+                imageUri != "unavailable_photo" &&
+                (imageUri.startsWith("gs://") ||
+                        imageUri.contains("firebasestorage.googleapis.com"))
+    }
+
+    private fun setupLogoutButton() {
         binding.profileBTNLogout.setOnClickListener {
             logoutUser()
         }
@@ -237,28 +265,50 @@ class ProfileFragment : Fragment() {
     private fun logoutUser() {
         val currentActivity = activity ?: return
         val credentialManager = CredentialManager.create(currentActivity)
+        val currentUserId = auth.currentUser?.uid
 
-        AuthUI.getInstance()
-            .signOut(currentActivity)
-            .addOnCompleteListener {
+        lifecycleScope.launch {
+            removeFcmTokenBeforeLogout(currentUserId)
 
-                val intent = Intent(currentActivity, LoginActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                }
+            AuthUI.getInstance()
+                .signOut(currentActivity)
+                .addOnCompleteListener {
 
-                currentActivity.startActivity(intent)
-                currentActivity.finish()
+                    val intent = Intent(currentActivity, LoginActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
 
-                lifecycleScope.launch {
-                    try {
-                        credentialManager.clearCredentialState(
-                            ClearCredentialStateRequest()
-                        )
-                    } catch (e: Exception) {
-                        Log.e("Logout", "Failed to clear credentials", e)
+                    currentActivity.startActivity(intent)
+                    currentActivity.finish()
+
+                    lifecycleScope.launch {
+                        try {
+                            credentialManager.clearCredentialState(
+                                ClearCredentialStateRequest()
+                            )
+                        } catch (e: Exception) {
+                            Log.e("Logout", "Failed to clear credentials", e)
+                        }
                     }
                 }
-            }
+        }
+    }
+
+    private suspend fun removeFcmTokenBeforeLogout(userId: String?) {
+        if (userId == null) return
+
+        try {
+            val token = FirebaseMessaging.getInstance().token.await()
+            userRepository.deleteFcmToken(userId, token)
+        } catch (e: Exception) {
+            Log.e("Logout", "Failed to remove FCM token", e)
+        }
+    }
+
+    private fun setupSettingsButton() {
+        binding.profileBTNSettings.setOnClickListener { startActivity(Intent(requireContext(),
+            SettingsActivity:: class.java)) }
+
     }
 
     override fun onResume() {

@@ -4,13 +4,15 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.eventspot.app.databinding.ActivityEventDetailsBinding
 import com.eventspot.app.model.Event
-import com.eventspot.app.repository.FirestoreUserRepository
+import com.eventspot.app.model.EventSource
 import com.eventspot.app.utilities.SavedEventsManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -114,24 +116,64 @@ class EventDetailsActivity : AppCompatActivity() {
     @SuppressLint("SetTextI18n")
     private fun bindEventData(event: Event) {
         binding.eventDetailsLBLName.text = event.name
-        binding.eventDetailsLBLProducer.text = "Producer: ${event.producer}"
+
+        binding.eventDetailsLBLCreator.text =
+            if (event.source == EventSource.PRODUCER) {
+                "Producer: ${event.producer}"
+            } else {
+                "Source: ${event.producer}"
+            }
+
         binding.eventDetailsLBLAddress.text = "Address: ${event.address}"
         binding.eventDetailsLBLDescription.text = event.description
-        binding.eventDetailsLBLCategories.text =
-            "Categories: ${event.categories.joinToString(", ")}"
-        binding.eventDetailsLBLDate.text = "Date: ${formatDate(event.dateTimeMillis)}"
-        binding.eventDetailsLBLTime.text = "Time: ${formatTime(event.dateTimeMillis)}"
-
+        binding.eventDetailsLBLCategories.text = "Categories: ${event.categories.joinToString(", ")}"
+        binding.eventDetailsLBLDateTime.text = "Date: ${formatDateTimeRange(event.dateTimeMillis, event.endTimeMillis)}"
         binding.eventDetailsBTNNavigate.visibility =
-            if (event.lat == 0.0 && event.lng == 0.0) android.view.View.INVISIBLE else android.view.View.VISIBLE
+            if (event.lat == 0.0 && event.lng == 0.0) View.GONE else View.VISIBLE
 
-        updateJoinButton(event)
         checkIfEventSaved(event.id)
 
         if (event.imageUri.isNotEmpty()) {
             Glide.with(this)
                 .load(event.imageUri)
                 .into(binding.eventDetailsIMGEvent)
+        }
+
+        applyEventSourceUi(event)
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun applyEventSourceUi(event: Event) {
+
+        if (event.source == EventSource.TEL_AVIV_MUNICIPALITY) {
+
+            binding.eventDetailsBTNJoin.visibility = View.GONE
+
+            if (event.sourceUrl.isNotEmpty()) {
+                binding.eventDetailsLBLLink.visibility = View.VISIBLE
+//                binding.eventDetailsLBLLink.text = "Explore event details"
+                binding.eventDetailsLBLLink.paint.isUnderlineText = true
+
+                binding.eventDetailsLBLLink.setOnClickListener {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(event.sourceUrl))
+                    startActivity(intent)
+                }
+            } else {
+                binding.eventDetailsLBLLink.visibility = View.GONE
+                binding.eventDetailsLBLLink.setOnClickListener(null)
+
+                Log.e(
+                    "EventDetails",
+                    "External event without URL: ${event.id}"
+                )
+            }
+
+        } else {
+
+            binding.eventDetailsLBLLink.visibility = View.GONE
+            binding.eventDetailsLBLLink.setOnClickListener(null)
+
+            updateJoinButton(event)
         }
     }
 
@@ -257,14 +299,29 @@ class EventDetailsActivity : AppCompatActivity() {
         }
     }
 
-    private fun formatDate(dateTimeMillis: Long): String {
-        val sdf = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-        return sdf.format(Date(dateTimeMillis))
-    }
+    private fun formatDateTimeRange(startMillis: Long, endMillis: Long): String {
+        val dateFormatter = SimpleDateFormat("d.M.yy", Locale.getDefault())
+        val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
 
-    private fun formatTime(dateTimeMillis: Long): String {
-        val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
-        return sdf.format(Date(dateTimeMillis))
+        val startDate = Date(startMillis)
+        val startDateText = dateFormatter.format(startDate)
+        val startTimeText = timeFormatter.format(startDate)
+
+        if (endMillis <= 0L) {
+            return "$startDateText, $startTimeText"
+        }
+
+        val endDate = Date(endMillis)
+        val endDateText = dateFormatter.format(endDate)
+        val endTimeText = timeFormatter.format(endDate)
+
+        val sameDay = startDateText == endDateText
+
+        return if (sameDay) {
+            "$startDateText, $startTimeText - $endTimeText"
+        } else {
+            "$startDateText - $endDateText, $startTimeText - $endTimeText"
+        }
     }
 
     override fun onDestroy() {

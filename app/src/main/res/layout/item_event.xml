@@ -46,103 +46,6 @@
             android:layout_height="wrap_content"
             android:padding="@dimen/event_card_padding">
 
-            <!-- Event title -->
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/event_LBL_title"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:maxLines="2"
-                android:textStyle="bold"
-                android:textSize="@dimen/event_title_size"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="Event Name" />
-
-            <!-- Producer -->
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/event_LBL_producer"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:textSize="@dimen/event_text_size"
-                android:layout_marginTop="4dp"
-                app:layout_constraintStart_toStartOf="@id/event_LBL_title"
-                app:layout_constraintEnd_toEndOf="@id/event_LBL_title"
-                app:layout_constraintTop_toBottomOf="@id/event_LBL_title"
-                tools:text="Producer Name" />
-
-            <!-- Date & Time -->
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/event_LBL_dateTime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="@dimen/event_text_size"
-                android:layout_marginTop="4dp"
-                android:layout_marginEnd="8dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/event_LBL_producer"
-                tools:text="Date Time " />
-
-
-            <!-- Address -->
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/event_LBL_address"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:textSize="@dimen/event_text_size"
-                android:layout_marginTop="4dp"
-                app:layout_constraintStart_toStartOf="@id/event_LBL_title"
-                app:layout_constraintEnd_toEndOf="@id/event_LBL_title"
-                app:layout_constraintTop_toBottomOf="@id/event_LBL_dateTime"
-                tools:text="Address" />
-
-            <!-- Distance -->
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/event_LBL_distance"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:textSize="@dimen/event_text_size"
-                android:layout_marginTop="4dp"
-                app:layout_constraintStart_toStartOf="@id/event_LBL_address"
-                app:layout_constraintEnd_toEndOf="@id/event_LBL_address"
-                app:layout_constraintTop_toBottomOf="@id/event_LBL_address"
-                tools:text="Distance" />
-
-            <!-- Short description -->
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/event_LBL_desc"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:maxLines="2"
-                android:textSize="@dimen/event_text_size"
-                android:layout_marginTop="6dp"
-                app:layout_constraintStart_toStartOf="@id/event_LBL_distance"
-                app:layout_constraintEnd_toEndOf="@id/event_LBL_distance"
-                app:layout_constraintTop_toBottomOf="@id/event_LBL_distance"
-                tools:text="Description" />
-
-            <!-- Categories ChipGroup -->
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/event_CHIPGROUP_categories"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                app:singleSelection="false"
-                app:chipSpacingHorizontal="6dp"
-                app:chipSpacingVertical="6dp"
-                app:layout_constraintStart_toStartOf="@id/event_LBL_title"
-                app:layout_constraintTop_toBottomOf="@id/event_LBL_desc">
-
-                <!-- Category 1 -->
-                <com.google.android.material.chip.Chip
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Category 1"
-                    android:clickable="false"
-                    android:checkable="false"
-                    tools:ignore="HardcodedText" />
-            </com.google.android.material.chip.ChipGroup>
-
             <!-- Saved icon -->
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/event_BTN_saved"
@@ -157,6 +60,115 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/empty_save" />
+
+            <!-- Event title - Constrained by icon -->
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/event_LBL_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:maxLines="2"
+                android:textStyle="bold"
+                android:textSize="@dimen/event_title_size"
+                android:textDirection="locale"
+                android:textAlignment="viewStart"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/event_BTN_saved"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="Event Name" />
+
+            <!-- Producer - Constrained by icon -->
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/event_LBL_producer"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/event_text_size"
+                android:layout_marginTop="4dp"
+                android:textDirection="locale"
+                android:textAlignment="viewStart"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/event_BTN_saved"
+                app:layout_constraintTop_toBottomOf="@id/event_LBL_title"
+                tools:text="Producer Name" />
+
+            <!-- Date & Time - Full width from parent start -->
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/event_LBL_dateTime"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/event_text_size"
+                android:layout_marginTop="4dp"
+                android:textDirection="locale"
+                android:textAlignment="viewStart"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/event_LBL_producer"
+                tools:text="Date Time " />
+
+            <!-- Address - Full width from parent start -->
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/event_LBL_address"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/event_text_size"
+                android:layout_marginTop="4dp"
+                android:textDirection="locale"
+                android:textAlignment="viewStart"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/event_LBL_dateTime"
+                tools:text="Address" />
+
+            <!-- Distance - Full width from parent start -->
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/event_LBL_distance"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/event_text_size"
+                android:layout_marginTop="4dp"
+                android:textDirection="locale"
+                android:textAlignment="viewStart"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/event_LBL_address"
+                tools:text="Distance" />
+
+            <!-- Short description - Full width from parent start -->
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/event_LBL_desc"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:maxLines="2"
+                android:textSize="@dimen/event_text_size"
+                android:layout_marginTop="6dp"
+                android:textDirection="locale"
+                android:textAlignment="viewStart"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/event_LBL_distance"
+                tools:text="Description" />
+
+            <!-- Categories ChipGroup - Full width from parent start -->
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/event_CHIPGROUP_categories"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:singleSelection="false"
+                app:chipSpacingHorizontal="6dp"
+                app:chipSpacingVertical="6dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/event_LBL_desc">
+
+                <!-- Category 1 -->
+                <com.google.android.material.chip.Chip
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Category 1"
+                    android:clickable="false"
+                    android:checkable="false"
+                    tools:ignore="HardcodedText" />
+            </com.google.android.material.chip.ChipGroup>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>

@@ -95,36 +95,25 @@
 
                 <!-- Producer -->
                 <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/eventDetails_LBL_producer"
+                    android:id="@+id/eventDetails_LBL_creator"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="@string/producer"
+                    android:text="Creator:"
                     android:textSize="16sp"
                     android:textColor="@android:color/black"
-                    tools:text="Producer" />
+                    tools:text="Creator:" />
 
                 <!-- Date -->
                 <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/eventDetails_LBL_date"
+                    android:id="@+id/eventDetails_LBL_dateTime"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="@string/date1"
+                    android:text="Date and Time"
                     android:textSize="16sp"
                     android:textColor="@android:color/black"
-                    tools:text="Date: 12/03/2026" />
-
-                <!-- Time -->
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/eventDetails_LBL_time"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/time"
-                    android:textSize="16sp"
-                    android:textColor="@android:color/black"
-                    tools:text="Time: 20:00" />
+                    tools:text="Date: 13.06.26 20:00 - 17.06.26 12:00" />
 
                 <!-- Address -->
                 <com.google.android.material.textview.MaterialTextView
@@ -178,6 +167,8 @@
                     android:textColor="@android:color/black"
                     android:textSize="16sp"
                     android:textStyle="bold"
+                    android:clickable="true"
+                    android:focusable="true"
                     android:visibility="gone"
                     tools:text="Open event page" />
 

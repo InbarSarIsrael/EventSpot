@@ -26,7 +26,7 @@
     <string name="comments">Comments</string>
     <string name="write_a_comment">Write a comment</string>
     <string name="add_comment">Add Comment</string>
-    <string name="event_page">Event Page</string>
+    <string name="event_page"><u>Explore event details</u></string>
     <string name="welcome_to_eventspot">Welcome to EventSpot</string>
     <string name="discover_events_near_you">Discover events near you</string>
     <string name="event_address">Event address</string>
@@ -63,4 +63,15 @@
     <string name="add_event">Add Event</string>
     <string name="edit_event">edit event</string>
     <string name="delete_event">delete event</string>
+    <string name="settings">Settings</string>
+    <string name="notifications">Notifications</string>
+    <string name="enable_notifications">Enable notifications</string>
+    <string name="joined_event_updates">Joined event updates</string>
+    <string name="daily_new_events">Daily new events</string>
+    <string name="permissions">Permissions</string>
+    <string name="location_permission">Location permission</string>
+    <string name="status_unknown">Status: Unknown</string>
+    <string name="manage">Manage</string>
+    <string name="end_date_and_time">End date and time</string>
+    <string name="optional_choose_when_the_event_ends">Optional - choose when the event ends</string>
 </resources>

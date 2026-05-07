@@ -8,6 +8,7 @@ enum class UserRole {
 data class User(
     val email: String = "",
     val name: String = "",
-    val role: UserRole = UserRole.EVENT_EXPLORER,
-    val userId: String = ""
+    val role: UserRole? = null,
+    val userId: String = "",
+    val notificationPreferences: NotificationPreferences = NotificationPreferences()
 )

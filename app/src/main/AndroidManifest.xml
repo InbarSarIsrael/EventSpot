@@ -4,8 +4,11 @@
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
+        android:name=".EventSpotApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -15,9 +18,19 @@
         android:supportsRtl="false"
         android:theme="@style/Theme.EventSpot">
         <activity
-            android:name=".AddActivity"
-            android:windowSoftInputMode="adjustPan"
+            android:name=".SettingsActivity"
             android:exported="false" />
+        <service
+            android:name=".utilities.EventSpotMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <activity
+            android:name=".AddActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".ChooseRoleActivity"
             android:exported="false" />
@@ -36,6 +49,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

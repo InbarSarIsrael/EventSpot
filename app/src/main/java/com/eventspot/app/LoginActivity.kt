@@ -15,7 +15,9 @@ import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class LoginActivity : AppCompatActivity() {
 
@@ -110,6 +112,7 @@ class LoginActivity : AppCompatActivity() {
                     email = user.email ?: "",
                     name = user.displayName ?: ""
                 )
+                saveFcmToken(user.uid)
 
                 val hasRole = userRepository.hasUserRole(user.uid)
 
@@ -128,5 +131,10 @@ class LoginActivity : AppCompatActivity() {
                 ).show()
             }
         }
+    }
+
+    private suspend fun saveFcmToken(userId: String) {
+        val token = FirebaseMessaging.getInstance().token.await()
+        userRepository.saveFcmToken(userId, token)
     }
 }

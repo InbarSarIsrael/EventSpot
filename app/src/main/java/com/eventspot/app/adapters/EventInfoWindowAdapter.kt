@@ -10,6 +10,9 @@ import com.eventspot.app.R
 import com.eventspot.app.model.Event
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.Marker
+import android.graphics.drawable.Drawable
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 
 class EventInfoWindowAdapter(
     context: Context,
@@ -40,14 +43,36 @@ class EventInfoWindowAdapter(
         titleView.text = event?.name ?: marker.title ?: "Event"
         addressView.text = event?.address ?: marker.snippet ?: ""
 
-        if (event?.imageUri == null || event.imageUri == "unavailable_photo") {
-            imageView.setImageResource(R.drawable.unavailable_photo)
-        } else {
+        val imageUrl = event?.imageUri
+
+        imageView.setImageResource(R.drawable.unavailable_photo)
+
+        if (!imageUrl.isNullOrBlank() && imageUrl != "unavailable_photo") {
             Glide.with(view.context)
-                .load(event.imageUri)
+                .load(imageUrl)
                 .placeholder(R.drawable.unavailable_photo)
                 .error(R.drawable.unavailable_photo)
-                .into(imageView)
+                .into(object : CustomTarget<Drawable>() {
+                    override fun onResourceReady(
+                        resource: Drawable,
+                        transition: Transition<in Drawable>?
+                    ) {
+                        imageView.setImageDrawable(resource)
+
+                        if (marker.isInfoWindowShown) {
+                            marker.hideInfoWindow()
+                            marker.showInfoWindow()
+                        }
+                    }
+
+                    override fun onLoadCleared(placeholder: Drawable?) {
+                        imageView.setImageDrawable(placeholder)
+                    }
+
+                    override fun onLoadFailed(errorDrawable: Drawable?) {
+                        imageView.setImageDrawable(errorDrawable)
+                    }
+                })
         }
     }
 }

@@ -16,19 +16,28 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
+import androidx.lifecycle.lifecycleScope
 import com.eventspot.app.AddActivity
 import com.eventspot.app.EventDetailsActivity
 import com.eventspot.app.adapters.EventInfoWindowAdapter
-import com.eventspot.app.databinding.FragmentEventsBinding
 import com.eventspot.app.databinding.FragmentMapBinding
 import com.eventspot.app.utilities.UserLocationHelper
 import com.google.firebase.firestore.FirebaseFirestore
 import com.eventspot.app.model.Event
+import com.eventspot.app.repository.FirestoreEventRepository
+import com.eventspot.app.utilities.NotificationPermissionHelper
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.Marker
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.launch
 
 class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
 
@@ -36,21 +45,44 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
     private val binding get() = _binding!!
     private var gMap: GoogleMap? = null
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private lateinit var locationHelper: UserLocationHelper
     private val telAviv = LatLng(32.0853, 34.7818) // fallback
     private val defaultZoom = 13f
     private val userZoom = 13f
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
-
+    private val eventRepository = FirestoreEventRepository()
+    private var eventsListener: ListenerRegistration? = null
     private val eventMarkers = mutableMapOf<String, Marker>()
     private val eventsById = mutableMapOf<String, Event>()
+
+    private lateinit var locationHelper: UserLocationHelper
     private val requestLocationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) {
                 showUserLocation()
             } else {
                 showTelAvivFallback(showToast = true)
+            }
+        }
+
+    private lateinit var notificationPermissionHelper: NotificationPermissionHelper
+    private val requestNotificationPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+
+            lifecycleScope.launch {
+                val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
+
+                if (granted) {
+                    Firebase.firestore.collection("users")
+                        .document(userId)
+                        .update(
+                            mapOf(
+                                "notificationPreferences.enabled" to true,
+                                "notificationPreferences.joinedEventUpdates" to true,
+                                "notificationPreferences.dailyNewEvents" to false
+                            )
+                        )
+                }
             }
         }
 
@@ -68,13 +100,16 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         locationHelper = UserLocationHelper(requireContext(), fusedLocationClient)
+        notificationPermissionHelper = NotificationPermissionHelper(requireContext())
 
         val mapFragment = childFragmentManager
             .findFragmentById(R.id.map_container) as SupportMapFragment
 
         mapFragment.getMapAsync(this)
 
+
         setupAddButton()
+        askNotificationPermissionIfNeeded()
     }
 
 
@@ -101,6 +136,13 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
             }
     }
 
+    private fun askNotificationPermissionIfNeeded() {
+        if (notificationPermissionHelper.hasNotificationPermission()) return
+        if (notificationPermissionHelper.wasNotificationPromptShown()) return
+
+        notificationPermissionHelper.markNotificationPromptAsShown()
+        requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
     override fun onMapReady(map: GoogleMap) {
         gMap = map
 
@@ -150,58 +192,90 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
     private fun loadEventsToMap() {
         val map = gMap ?: return
 
-        db.collection("events")
-            .get()
-            .addOnSuccessListener { result ->
-                val incomingEventIds = mutableSetOf<String>()
+        eventsListener?.remove()
 
-                for (document in result.documents) {
-                    val event = document.toObject(Event::class.java)?.copy(id = document.id)
-                        ?: continue
+        eventsListener = eventRepository.observeEvents { events ->
+            renderEventsOnMap(map, events)
+        }
+    }
 
-                    if (event.lat == 0.0 && event.lng == 0.0) continue
+    private fun renderEventsOnMap(map: GoogleMap, events: List<Event>) {
+        val incomingEventIds = mutableSetOf<String>()
 
-                    eventsById[event.id] = event
-                    incomingEventIds.add(event.id)
+        for (event in events) {
+            incomingEventIds.add(event.id)
+            eventsById[event.id] = event
+            addOrUpdateEventMarker(map, event)
+        }
 
-                    val eventLatLng = LatLng(event.lat, event.lng)
-                    val existingMarker = eventMarkers[event.id]
+        removeOldMarkers(incomingEventIds)
+    }
 
-                    if (existingMarker == null) {
-                        val newMarker = map.addMarker(
-                            MarkerOptions()
-                                .position(eventLatLng)
-                                .title(event.name)
-                                .snippet(event.address)
-                        )
+    private fun addOrUpdateEventMarker(map: GoogleMap, event: Event) {
+        val eventLatLng = getEventMarkerPosition(event)
+        val markerColor = getEventMarkerColor(event)
+        val markerSnippet = getEventMarkerSnippet(event)
 
-                        if (newMarker != null) {
-                            newMarker.tag = event.id
-                            eventMarkers[event.id] = newMarker
-                        }
-                    } else { //need to check about update event
-                        existingMarker.position = eventLatLng
-                        existingMarker.title = event.name
-                        existingMarker.snippet = event.address
-                        existingMarker.tag = event.id
-                    }
-                }
+        val existingMarker = eventMarkers[event.id]
 
-                val idsToRemove = eventMarkers.keys - incomingEventIds
+        if (existingMarker == null) {
+            val newMarker = map.addMarker(
+                MarkerOptions()
+                    .position(eventLatLng)
+                    .title(event.name)
+                    .snippet(markerSnippet)
+                    .icon(BitmapDescriptorFactory.defaultMarker(markerColor))
+            )
 
-                for (eventId in idsToRemove) {
-                    eventMarkers[eventId]?.remove()
-                    eventMarkers.remove(eventId)
-                    eventsById.remove(eventId)
-                }
+            newMarker?.let {
+                it.tag = event.id
+                eventMarkers[event.id] = it
             }
-            .addOnFailureListener {
-                Toast.makeText(
-                    requireContext(),
-                    "Failed to load events",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+        } else {
+            existingMarker.position = eventLatLng
+            existingMarker.title = event.name
+            existingMarker.snippet = markerSnippet
+            existingMarker.setIcon(BitmapDescriptorFactory.defaultMarker(markerColor))
+            existingMarker.tag = event.id
+        }
+    }
+
+    private fun getEventMarkerPosition(event: Event): LatLng {
+        return if (hasExactLocation(event)) {
+            LatLng(event.lat, event.lng)
+        } else {
+            telAviv
+        }
+    }
+
+    private fun getEventMarkerColor(event: Event): Float {
+        return if (hasExactLocation(event)) {
+            BitmapDescriptorFactory.HUE_RED
+        } else {
+            BitmapDescriptorFactory.HUE_AZURE
+        }
+    }
+
+    private fun getEventMarkerSnippet(event: Event): String {
+        return if (hasExactLocation(event)) {
+            event.address
+        } else {
+            "General location: Tel Aviv"
+        }
+    }
+
+    private fun hasExactLocation(event: Event): Boolean {
+        return event.lat != 0.0 && event.lng != 0.0
+    }
+
+    private fun removeOldMarkers(incomingEventIds: Set<String>) {
+        val idsToRemove = eventMarkers.keys - incomingEventIds
+
+        for (eventId in idsToRemove) {
+            eventMarkers[eventId]?.remove()
+            eventMarkers.remove(eventId)
+            eventsById.remove(eventId)
+        }
     }
 
     private fun setupInfoWindowClicks() {
@@ -242,6 +316,10 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
 
     override fun onDestroyView() {
         super.onDestroyView()
+
+        eventsListener?.remove()
+        eventsListener = null
+
         gMap = null
         eventMarkers.clear()
         eventsById.clear()

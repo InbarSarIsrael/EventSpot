@@ -200,7 +200,7 @@ class EventsFragment : Fragment() {
                 !showAvailableOnly || isAvailableEvent
 
             val matchesDate =
-                selectedFromDateMillis == null || event.dateTimeMillis >= selectedFromDateMillis!!
+                selectedFromDateMillis == null || isEventRelevantFromDate(event, selectedFromDateMillis!!)
 
             matchesSearch && matchesAvailability && matchesDate
         }
@@ -215,6 +215,16 @@ class EventsFragment : Fragment() {
             binding.eventsLBLEmptyState.visibility = View.GONE
             binding.eventsRVList.visibility = View.VISIBLE
         }
+    }
+
+    private fun isEventRelevantFromDate(event: Event, selectedDateMillis: Long): Boolean {
+        val eventEndMillis = if (event.endTimeMillis > 0L) {
+            event.endTimeMillis
+        } else {
+            event.dateTimeMillis
+        }
+
+        return eventEndMillis >= selectedDateMillis
     }
 
     private fun clearFilters() {

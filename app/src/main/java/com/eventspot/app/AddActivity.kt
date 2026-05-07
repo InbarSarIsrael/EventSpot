@@ -36,6 +36,7 @@ class AddActivity : AppCompatActivity() {
         }
     private val selectedCategories = mutableListOf<String>()
     private var selectedDateTimeMillis: Long? = null
+    private var selectedEndTimeMillis: Long? = null
     private var selectedAddress: String? = null
     private var selectedLat: Double? = null
     private var selectedLng: Double? = null
@@ -59,6 +60,7 @@ class AddActivity : AppCompatActivity() {
     private var isEditMode = false
     private var editingEventId: String? = null
     private var existingImageUri: String? = null
+    private var existingParticipants: List<String> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -133,17 +135,21 @@ class AddActivity : AppCompatActivity() {
 
     private fun setupDateTimePicker() {
         binding.addEDTDateAndTime.setOnClickListener {
-            showDatePicker()
+            showDatePicker(isEndDate = false)
+        }
+
+        binding.addEDTEndDateAndTime.setOnClickListener {
+            showDatePicker(isEndDate = true)
         }
     }
 
-    private fun showDatePicker() {
+    private fun showDatePicker(isEndDate: Boolean) {
         val now = Calendar.getInstance()
 
         val datePickerDialog = DatePickerDialog(
             this,
             { _, year, month, dayOfMonth ->
-                showTimePicker(year, month, dayOfMonth)
+                showTimePicker(year, month, dayOfMonth, isEndDate)
             },
             now.get(Calendar.YEAR),
             now.get(Calendar.MONTH),
@@ -154,7 +160,7 @@ class AddActivity : AppCompatActivity() {
         datePickerDialog.show()
     }
 
-    private fun showTimePicker(year: Int, month: Int, dayOfMonth: Int) {
+    private fun showTimePicker(year: Int, month: Int, dayOfMonth: Int, isEndDate: Boolean) {
         val now = Calendar.getInstance()
 
         val timePickerDialog = TimePickerDialog(
@@ -175,10 +181,17 @@ class AddActivity : AppCompatActivity() {
                     return@TimePickerDialog
                 }
 
-                selectedDateTimeMillis = selectedCalendar.timeInMillis
-
                 val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-                binding.addEDTDateAndTime.setText(formatter.format(selectedCalendar.time))
+
+                if (isEndDate) {
+                    selectedEndTimeMillis = selectedCalendar.timeInMillis
+                    binding.addEDTEndDateAndTime.setText(formatter.format(selectedCalendar.time))
+                    binding.addLBLEndDateAndTime.error = null
+                } else {
+                    selectedDateTimeMillis = selectedCalendar.timeInMillis
+                    binding.addEDTDateAndTime.setText(formatter.format(selectedCalendar.time))
+                    binding.addLBLDateAndTime.error = null
+                }
             },
             now.get(Calendar.HOUR_OF_DAY),
             now.get(Calendar.MINUTE),
@@ -261,6 +274,13 @@ class AddActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            val endTimeMillis = selectedEndTimeMillis ?: 0L
+
+            if (endTimeMillis > 0L && endTimeMillis <= dateTimeMillis) {
+                binding.addLBLEndDateAndTime.error = "End date must be after start date"
+                return@setOnClickListener
+            }
+
             val address = selectedAddress ?: run {
                 binding.addLBLAddress.error = "Address is required"
                 return@setOnClickListener
@@ -272,12 +292,12 @@ class AddActivity : AppCompatActivity() {
             setLoadingState(true)
 
             saveEvent(
-                eventName = eventName, dateTimeMillis = dateTimeMillis, address = address,
+                eventName = eventName, dateTimeMillis = dateTimeMillis,endTimeMillis = endTimeMillis, address = address,
                 lat = lat, lng = lng, maxParticipants = maxParticipants)
         }
     }
 
-    private fun saveEvent(eventName: String, dateTimeMillis: Long, address: String,
+    private fun saveEvent(eventName: String, dateTimeMillis: Long, endTimeMillis: Long, address: String,
                           lat: Double, lng: Double, maxParticipants: Int) {
         val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: run {
             setLoadingState(false)
@@ -298,7 +318,8 @@ class AddActivity : AppCompatActivity() {
 
                         saveEventToFirestore(
                             db = db, currentUserId = currentUserId, producerName = producerName,
-                            eventName = eventName, dateTimeMillis = dateTimeMillis, address = address,
+                            eventName = eventName, dateTimeMillis = dateTimeMillis,endTimeMillis = endTimeMillis,
+                            address = address,
                             lat = lat, lng = lng, maxParticipants = maxParticipants, finalImageUri = finalImageUri)
                     }
                 } else {
@@ -306,7 +327,8 @@ class AddActivity : AppCompatActivity() {
 
                     saveEventToFirestore(
                         db = db, currentUserId = currentUserId, producerName = producerName,
-                        eventName = eventName, dateTimeMillis = dateTimeMillis, address = address,
+                        eventName = eventName, dateTimeMillis = dateTimeMillis,endTimeMillis = endTimeMillis,
+                        address = address,
                         lat = lat, lng = lng, maxParticipants = maxParticipants, finalImageUri = finalImageUri)
                 }
             }
@@ -318,7 +340,8 @@ class AddActivity : AppCompatActivity() {
 
     private fun saveEventToFirestore(
         db: FirebaseFirestore, currentUserId: String, producerName: String,
-        eventName: String, dateTimeMillis: Long, address: String,
+        eventName: String, dateTimeMillis: Long, endTimeMillis: Long,
+        address: String,
         lat: Double, lng: Double, maxParticipants: Int, finalImageUri: String) {
 
         val documentRef = if (isEditMode) {
@@ -334,14 +357,15 @@ class AddActivity : AppCompatActivity() {
             name = eventName,
             producer = producerName,
             dateTimeMillis = dateTimeMillis,
+            endTimeMillis = endTimeMillis,
             address = address,
             description = binding.addEDTDescription.text.toString().trim(),
             categories = selectedCategories.toList(),
             lat = lat,
             lng = lng,
-            source = EventSource.USER,
+            source = EventSource.PRODUCER,
             maxParticipants = maxParticipants,
-            participants = emptyList()
+            participants = if (isEditMode) existingParticipants else emptyList()
         )
 
         documentRef.set(event)
@@ -380,14 +404,19 @@ class AddActivity : AppCompatActivity() {
                 if (event.maxParticipants != -1) {
                     binding.addEDTMaxParticipants.setText(event.maxParticipants.toString())
                 }
-
+                val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
                 selectedDateTimeMillis = event.dateTimeMillis
+                if (event.endTimeMillis > 0L) {
+                    selectedEndTimeMillis = event.endTimeMillis
+                    binding.addEDTEndDateAndTime.setText(formatter.format(event.endTimeMillis))
+                }
                 selectedAddress = event.address
                 selectedLat = event.lat
                 selectedLng = event.lng
                 existingImageUri = event.imageUri
 
-                val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                existingParticipants = event.participants
+
                 binding.addEDTDateAndTime.setText(formatter.format(event.dateTimeMillis))
 
                 selectedCategories.clear()
@@ -463,9 +492,15 @@ class AddActivity : AppCompatActivity() {
         if (value == null || value < 1) {
             binding.addLBLMaxParticipants.error = "Value must be 1 or greater"
             return null
-        } else {
-            binding.addLBLMaxParticipants.error = null
-            return value
         }
+
+        if (isEditMode && value < existingParticipants.size) {
+            binding.addLBLMaxParticipants.error =
+                "Cannot be less than current participants (${existingParticipants.size})"
+            return null
+        }
+
+        binding.addLBLMaxParticipants.error = null
+        return value
     }
 }
