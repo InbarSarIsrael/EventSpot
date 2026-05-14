@@ -61,6 +61,7 @@ class AddActivity : AppCompatActivity() {
     private var editingEventId: String? = null
     private var existingImageUri: String? = null
     private var existingParticipants: List<String> = emptyList()
+    private var existingMaxParticipants: Int = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -416,6 +417,7 @@ class AddActivity : AppCompatActivity() {
                 existingImageUri = event.imageUri
 
                 existingParticipants = event.participants
+                existingMaxParticipants = event.maxParticipants
 
                 binding.addEDTDateAndTime.setText(formatter.format(event.dateTimeMillis))
 
@@ -494,9 +496,15 @@ class AddActivity : AppCompatActivity() {
             return null
         }
 
-        if (isEditMode && value < existingParticipants.size) {
+        if (isEditMode && existingMaxParticipants == -1) {
             binding.addLBLMaxParticipants.error =
-                "Cannot be less than current participants (${existingParticipants.size})"
+                "Event already has unlimited participants. Please leave the field empty."
+            return null
+        }
+
+        if (isEditMode && value < existingMaxParticipants) {
+            binding.addLBLMaxParticipants.error =
+                "Cannot reduce participant limit after the event was created"
             return null
         }
 
