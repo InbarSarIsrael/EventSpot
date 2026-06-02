@@ -54,7 +54,7 @@ class EventAdapter(
         fun bind(event: Event) {
             binding.eventLBLTitle.text = event.name
             binding.eventLBLProducer.text = event.producer
-            binding.eventLBLDateTime.text = formatDateTime(event.dateTimeMillis)
+            binding.eventLBLDateTime.text = formatDateTime(event.dateTimeMillis, event.hasTime)
             binding.eventLBLAddress.text = event.address
             binding.eventLBLDesc.text = event.description
 
@@ -136,7 +136,12 @@ class EventAdapter(
             }
         }
 
-        private fun formatDateTime(dateTimeMillis: Long): String {
+        private fun formatDateTime(dateTimeMillis: Long, hasTime: Boolean): String {
+            if (!hasTime) {
+                val formatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+                return formatter.format(Date(dateTimeMillis))
+            }
+
             val formatter = SimpleDateFormat("dd.MM.yyyy • HH:mm", Locale.getDefault())
             return formatter.format(Date(dateTimeMillis))
         }

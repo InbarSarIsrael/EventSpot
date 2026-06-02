@@ -50,6 +50,22 @@ class FirestoreUserRepository {
             .await()
     }
 
+    suspend fun saveUserOnboardingPreferences(
+        userId: String,
+        role: UserRole,
+        preferredCategories: List<String>
+    ) {
+        usersCollection
+            .document(userId)
+            .update(
+                mapOf(
+                    "role" to role.name,
+                    "preferredCategories" to preferredCategories
+                )
+            )
+            .await()
+    }
+
     suspend fun saveEvent(userId: String, eventId: String) {
         val savedEventData = hashMapOf(
             "eventId" to eventId,

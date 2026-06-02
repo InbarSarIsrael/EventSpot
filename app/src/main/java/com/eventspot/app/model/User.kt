@@ -10,5 +10,6 @@ data class User(
     val name: String = "",
     val role: UserRole? = null,
     val userId: String = "",
-    val notificationPreferences: NotificationPreferences = NotificationPreferences()
+    val notificationPreferences: NotificationPreferences = NotificationPreferences(),
+    val preferredCategories: List<String> = emptyList()
 )

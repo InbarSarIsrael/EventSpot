@@ -24,6 +24,7 @@
     <!-- Text sizes -->
     <dimen name="event_title_size">16sp</dimen>
     <dimen name="event_text_size">13sp</dimen>
+    <dimen name="map_recommendations_peek_height">230dp</dimen>
 
 
 </resources>

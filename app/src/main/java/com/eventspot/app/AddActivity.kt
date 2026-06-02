@@ -37,6 +37,7 @@ class AddActivity : AppCompatActivity() {
     private val selectedCategories = mutableListOf<String>()
     private var selectedDateTimeMillis: Long? = null
     private var selectedEndTimeMillis: Long? = null
+    private var selectedEventHasTime: Boolean = true
     private var selectedAddress: String? = null
     private var selectedLat: Double? = null
     private var selectedLng: Double? = null
@@ -135,6 +136,11 @@ class AddActivity : AppCompatActivity() {
     }
 
     private fun setupDateTimePicker() {
+        binding.addSWIncludeTime.setOnCheckedChangeListener { _, isChecked ->
+            selectedEventHasTime = isChecked
+            updateDateTimeMode(clearSelection = true)
+        }
+
         binding.addEDTDateAndTime.setOnClickListener {
             showDatePicker(isEndDate = false)
         }
@@ -150,7 +156,11 @@ class AddActivity : AppCompatActivity() {
         val datePickerDialog = DatePickerDialog(
             this,
             { _, year, month, dayOfMonth ->
-                showTimePicker(year, month, dayOfMonth, isEndDate)
+                if (selectedEventHasTime) {
+                    showTimePicker(year, month, dayOfMonth, isEndDate)
+                } else {
+                    setDateOnlySelection(year, month, dayOfMonth, isEndDate)
+                }
             },
             now.get(Calendar.YEAR),
             now.get(Calendar.MONTH),
@@ -200,6 +210,63 @@ class AddActivity : AppCompatActivity() {
         )
 
         timePickerDialog.show()
+    }
+
+    private fun setDateOnlySelection(year: Int, month: Int, dayOfMonth: Int, isEndDate: Boolean) {
+        val selectedCalendar = Calendar.getInstance().apply {
+            set(Calendar.YEAR, year)
+            set(Calendar.MONTH, month)
+            set(Calendar.DAY_OF_MONTH, dayOfMonth)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        if (isEndDate) {
+            selectedEndTimeMillis = endOfDayMillis(selectedCalendar.timeInMillis)
+            binding.addEDTEndDateAndTime.setText(formatDateOnly(selectedCalendar.timeInMillis))
+            binding.addLBLEndDateAndTime.error = null
+        } else {
+            selectedDateTimeMillis = selectedCalendar.timeInMillis
+            binding.addEDTDateAndTime.setText(formatDateOnly(selectedCalendar.timeInMillis))
+            binding.addLBLDateAndTime.error = null
+        }
+    }
+
+    private fun updateDateTimeMode(clearSelection: Boolean) {
+        if (clearSelection) {
+            selectedDateTimeMillis = null
+            selectedEndTimeMillis = null
+            binding.addEDTDateAndTime.setText("")
+            binding.addEDTEndDateAndTime.setText("")
+            binding.addLBLDateAndTime.error = null
+            binding.addLBLEndDateAndTime.error = null
+        }
+
+        binding.addLBLDateAndTime.hint =
+            if (selectedEventHasTime) getString(R.string.date_and_time) else getString(R.string.date_only)
+
+        binding.addLBLEndDateAndTime.hint =
+            if (selectedEventHasTime) getString(R.string.end_date_and_time) else getString(R.string.end_date)
+
+        binding.addEDTDateAndTime.hint = null
+        binding.addEDTEndDateAndTime.hint = null
+    }
+
+    private fun formatDateOnly(timeMillis: Long): String {
+        val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        return formatter.format(timeMillis)
+    }
+
+    private fun endOfDayMillis(timeMillis: Long): Long {
+        return Calendar.getInstance().apply {
+            timeInMillis = timeMillis
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
+        }.timeInMillis
     }
 
     private fun setupAddressPicker() {
@@ -271,11 +338,16 @@ class AddActivity : AppCompatActivity() {
             val maxParticipants = validateMaxParticipants() ?: return@setOnClickListener
 
             val dateTimeMillis = selectedDateTimeMillis ?: run {
-                binding.addLBLDateAndTime.error = "Date and time are required"
+                binding.addLBLDateAndTime.error =
+                    if (selectedEventHasTime) "Date and time are required" else getString(R.string.date_required)
                 return@setOnClickListener
             }
 
-            val endTimeMillis = selectedEndTimeMillis ?: 0L
+            val endTimeMillis = if (selectedEventHasTime) {
+                selectedEndTimeMillis ?: 0L
+            } else {
+                selectedEndTimeMillis ?: endOfDayMillis(dateTimeMillis)
+            }
 
             if (endTimeMillis > 0L && endTimeMillis <= dateTimeMillis) {
                 binding.addLBLEndDateAndTime.error = "End date must be after start date"
@@ -294,12 +366,12 @@ class AddActivity : AppCompatActivity() {
 
             saveEvent(
                 eventName = eventName, dateTimeMillis = dateTimeMillis,endTimeMillis = endTimeMillis, address = address,
-                lat = lat, lng = lng, maxParticipants = maxParticipants)
+                lat = lat, lng = lng, maxParticipants = maxParticipants, hasTime = selectedEventHasTime)
         }
     }
 
     private fun saveEvent(eventName: String, dateTimeMillis: Long, endTimeMillis: Long, address: String,
-                          lat: Double, lng: Double, maxParticipants: Int) {
+                          lat: Double, lng: Double, maxParticipants: Int, hasTime: Boolean) {
         val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: run {
             setLoadingState(false)
             return
@@ -321,7 +393,8 @@ class AddActivity : AppCompatActivity() {
                             db = db, currentUserId = currentUserId, producerName = producerName,
                             eventName = eventName, dateTimeMillis = dateTimeMillis,endTimeMillis = endTimeMillis,
                             address = address,
-                            lat = lat, lng = lng, maxParticipants = maxParticipants, finalImageUri = finalImageUri)
+                            lat = lat, lng = lng, maxParticipants = maxParticipants,
+                            finalImageUri = finalImageUri, hasTime = hasTime)
                     }
                 } else {
                     val finalImageUri = existingImageUri ?: "unavailable_photo"
@@ -330,7 +403,8 @@ class AddActivity : AppCompatActivity() {
                         db = db, currentUserId = currentUserId, producerName = producerName,
                         eventName = eventName, dateTimeMillis = dateTimeMillis,endTimeMillis = endTimeMillis,
                         address = address,
-                        lat = lat, lng = lng, maxParticipants = maxParticipants, finalImageUri = finalImageUri)
+                        lat = lat, lng = lng, maxParticipants = maxParticipants,
+                        finalImageUri = finalImageUri, hasTime = hasTime)
                 }
             }
             .addOnFailureListener {
@@ -343,7 +417,7 @@ class AddActivity : AppCompatActivity() {
         db: FirebaseFirestore, currentUserId: String, producerName: String,
         eventName: String, dateTimeMillis: Long, endTimeMillis: Long,
         address: String,
-        lat: Double, lng: Double, maxParticipants: Int, finalImageUri: String) {
+        lat: Double, lng: Double, maxParticipants: Int, finalImageUri: String, hasTime: Boolean) {
 
         val documentRef = if (isEditMode) {
             db.collection("events").document(editingEventId!!)
@@ -359,6 +433,7 @@ class AddActivity : AppCompatActivity() {
             producer = producerName,
             dateTimeMillis = dateTimeMillis,
             endTimeMillis = endTimeMillis,
+            hasTime = hasTime,
             address = address,
             description = binding.addEDTDescription.text.toString().trim(),
             categories = selectedCategories.toList(),
@@ -405,11 +480,17 @@ class AddActivity : AppCompatActivity() {
                 if (event.maxParticipants != -1) {
                     binding.addEDTMaxParticipants.setText(event.maxParticipants.toString())
                 }
+                selectedEventHasTime = event.hasTime
+                binding.addSWIncludeTime.isChecked = selectedEventHasTime
+                updateDateTimeMode(clearSelection = false)
+
                 val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
                 selectedDateTimeMillis = event.dateTimeMillis
                 if (event.endTimeMillis > 0L) {
                     selectedEndTimeMillis = event.endTimeMillis
-                    binding.addEDTEndDateAndTime.setText(formatter.format(event.endTimeMillis))
+                    if (event.hasTime) {
+                        binding.addEDTEndDateAndTime.setText(formatter.format(event.endTimeMillis))
+                    }
                 }
                 selectedAddress = event.address
                 selectedLat = event.lat
@@ -419,7 +500,9 @@ class AddActivity : AppCompatActivity() {
                 existingParticipants = event.participants
                 existingMaxParticipants = event.maxParticipants
 
-                binding.addEDTDateAndTime.setText(formatter.format(event.dateTimeMillis))
+                binding.addEDTDateAndTime.setText(
+                    if (event.hasTime) formatter.format(event.dateTimeMillis) else formatDateOnly(event.dateTimeMillis)
+                )
 
                 selectedCategories.clear()
                 binding.addChipGroupCategories.removeAllViews()

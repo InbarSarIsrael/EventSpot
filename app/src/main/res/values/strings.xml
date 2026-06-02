@@ -36,6 +36,10 @@
     <string name="saved_events">Saved Events</string>
     <string name="no_saved_events_yet">No saved events yet</string>
     <string name="no_events_found">No events found</string>
+    <string name="recommended_for_you">Recommended for you</string>
+    <string name="based_on_your_interests">Based on your selected interests</string>
+    <string name="no_recommended_events_yet">No recommended events yet</string>
+    <string name="recommended_event_image">Recommended event image</string>
     <string name="available_only">Available only</string>
     <string name="select_date">Select date</string>
     <string name="discover_events_save_your_favorites_and_join_activities">Discover events, save your favorites, and join activities</string>
@@ -45,6 +49,12 @@
     <string name="choose_your_role">Choose Your Role</string>
     <string name="select_how_you_want_to_use_eventspot">Select how you want to use EventSpot</string>
     <string name="event_explorer">Event Explorer</string>
+    <string name="choose_your_interests">Choose your interests</string>
+    <string name="choose_up_to_5_categories">Choose at least 1 category and up to 5 categories</string>
+    <string name="selected_categories_count_default">Selected 0/5</string>
+    <string name="selected_categories_count">Selected %1$d/%2$d</string>
+    <string name="choose_categories_limit_message">You can choose up to %1$d categories</string>
+    <string name="please_choose_at_least_one_category">Please choose at least one category</string>
     <string name="profile2">Profile</string>
     <string name="logout">logout</string>
     <string name="add">add</string>
@@ -57,6 +67,9 @@
     <string name="categories_hint">You can choose up to 3 categories</string>
     <string name="date_and_time">Date and time</string>
     <string name="date_time_hint">Choose a future date and time</string>
+    <string name="include_time">Include time</string>
+    <string name="date_only">Date only</string>
+    <string name="date_required">Date is required</string>
     <string name="address_hint">Tap to search for a place on the map</string>
     <string name="max_participants">Max participants</string>
     <string name="max_participants_hint">Optional. Leave empty for no participant limit</string>
@@ -73,5 +86,6 @@
     <string name="status_unknown">Status: Unknown</string>
     <string name="manage">Manage</string>
     <string name="end_date_and_time">End date and time</string>
+    <string name="end_date">End date</string>
     <string name="optional_choose_when_the_event_ends">Optional - choose when the event ends</string>
 </resources>

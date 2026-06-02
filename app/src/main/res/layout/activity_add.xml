@@ -79,9 +79,9 @@
                 android:id="@+id/add_ACT_categories"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/choose_category"
                 android:clickable="true"
                 android:focusable="false"
+                android:hint="@string/choose_category"
                 android:inputType="none"
                 android:textColor="@color/black" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -104,11 +104,20 @@
             android:textColor="@android:color/darker_gray"
             android:textSize="12sp" />
 
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/add_SW_includeTime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="@string/include_time"
+            android:textColor="@color/black" />
+
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/add_LBL_DateAndTime"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
+            android:hint="@string/date_and_time"
             app:boxStrokeColor="@color/black"
             app:hintTextColor="@color/black">
 
@@ -118,7 +127,6 @@
                 android:layout_height="wrap_content"
                 android:clickable="true"
                 android:focusable="false"
-                android:hint="@string/date_and_time"
                 android:textColor="@color/black" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -136,6 +144,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
+            android:hint="@string/end_date_and_time"
             app:boxStrokeColor="@color/black"
             app:hintTextColor="@color/black">
 
@@ -145,7 +154,6 @@
                 android:layout_height="wrap_content"
                 android:clickable="true"
                 android:focusable="false"
-                android:hint="@string/end_date_and_time"
                 android:textColor="@color/black" />
         </com.google.android.material.textfield.TextInputLayout>
 

@@ -15,8 +15,73 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|start"
-        android:layout_margin="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="246dp"
         android:contentDescription="@string/add"
         android:src="@drawable/ic_add" />
+
+    <LinearLayout
+        android:id="@+id/map_recommendations_panel"
+        android:layout_width="match_parent"
+        android:layout_height="430dp"
+        android:layout_gravity="bottom"
+        android:background="@drawable/bg_map_recommendations_panel"
+        android:elevation="10dp"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="0dp"
+        android:paddingBottom="14dp">
+
+        <View
+            android:id="@+id/map_drag_handle"
+            android:layout_width="56dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="12dp"
+            android:background="#D0D0D0" />
+
+        <TextView
+            android:id="@+id/map_LBL_recommendations_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingEnd="20dp"
+            android:text="@string/recommended_for_you"
+            android:textColor="@color/black"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/map_LBL_recommendations_subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:paddingEnd="20dp"
+            android:text="@string/based_on_your_interests"
+            android:textColor="#666666"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/map_LBL_recommendations_empty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:paddingEnd="20dp"
+            android:text="@string/no_recommended_events_yet"
+            android:textColor="#666666"
+            android:textSize="14sp"
+            android:visibility="gone" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/map_RV_recommendations"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="12dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:orientation="horizontal"
+            android:paddingEnd="20dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+    </LinearLayout>
 
 </FrameLayout>

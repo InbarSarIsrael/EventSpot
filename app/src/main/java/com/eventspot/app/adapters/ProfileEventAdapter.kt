@@ -41,7 +41,7 @@ class ProfileEventAdapter(
 
         fun bind(event: Event) {
             binding.profileLBLTitle.text = event.name
-            binding.profileLBLDateTime.text = formatDateTime(event.dateTimeMillis)
+            binding.profileLBLDateTime.text = formatDateTime(event.dateTimeMillis, event.hasTime)
             binding.profileLBLAddress.text = event.address
 
             bindImage(event.imageUri)
@@ -91,7 +91,12 @@ class ProfileEventAdapter(
             }
         }
 
-        private fun formatDateTime(dateTimeMillis: Long): String {
+        private fun formatDateTime(dateTimeMillis: Long, hasTime: Boolean): String {
+            if (!hasTime) {
+                val formatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+                return formatter.format(Date(dateTimeMillis))
+            }
+
             val formatter = SimpleDateFormat("dd.MM.yyyy • HH:mm", Locale.getDefault())
             return formatter.format(Date(dateTimeMillis))
         }

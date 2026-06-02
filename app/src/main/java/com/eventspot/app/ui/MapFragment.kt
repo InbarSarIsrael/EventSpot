@@ -18,12 +18,15 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Build
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.eventspot.app.AddActivity
 import com.eventspot.app.EventDetailsActivity
 import com.eventspot.app.adapters.EventInfoWindowAdapter
+import com.eventspot.app.adapters.MapRecommendedEventAdapter
 import com.eventspot.app.databinding.FragmentMapBinding
 import com.eventspot.app.utilities.UserLocationHelper
 import com.google.firebase.firestore.FirebaseFirestore
@@ -38,7 +41,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.launch
-
+import com.eventspot.app.utilities.RecommendationEngine
+import com.eventspot.app.utilities.SavedEventsManager
 class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
 
     private var _binding: FragmentMapBinding? = null
@@ -51,9 +55,18 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
     private val eventRepository = FirestoreEventRepository()
+    private val recommendationEngine = RecommendationEngine()
+    private val savedEventsManager = SavedEventsManager()
     private var eventsListener: ListenerRegistration? = null
     private val eventMarkers = mutableMapOf<String, Marker>()
     private val eventsById = mutableMapOf<String, Event>()
+    private lateinit var recommendedEventAdapter: MapRecommendedEventAdapter
+    private var preferredCategories: List<String> = emptyList()
+    private var savedEventIds: Set<String> = emptySet()
+    private var allEvents: List<Event> = emptyList()
+    private var recommendationsCollapsedTranslationY = 0f
+    private var dragStartRawY = 0f
+    private var dragStartTranslationY = 0f
 
     private lateinit var locationHelper: UserLocationHelper
     private val requestLocationPermission =
@@ -107,8 +120,11 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
 
         mapFragment.getMapAsync(this)
 
-
+        setupRecommendationsPanelDrag()
         setupAddButton()
+        setupRecommendedEventsList()
+        loadPreferredCategories()
+        loadSavedEventIds()
         askNotificationPermissionIfNeeded()
     }
 
@@ -134,6 +150,110 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
             .addOnFailureListener {
                 binding.mapBTNAdd.visibility = View.GONE
             }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupRecommendationsPanelDrag() {
+        binding.mapRecommendationsPanel.post {
+            recommendationsCollapsedTranslationY =
+                (binding.mapRecommendationsPanel.height - resources.getDimensionPixelSize(
+                    R.dimen.map_recommendations_peek_height
+                )).coerceAtLeast(0).toFloat()
+
+            binding.mapRecommendationsPanel.translationY = recommendationsCollapsedTranslationY
+        }
+
+        val dragListener = View.OnTouchListener { _, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    dragStartRawY = event.rawY
+                    dragStartTranslationY = binding.mapRecommendationsPanel.translationY
+                    true
+                }
+
+                MotionEvent.ACTION_MOVE -> {
+                    val dragDistance = event.rawY - dragStartRawY
+                    val nextTranslation = (dragStartTranslationY + dragDistance)
+                        .coerceIn(0f, recommendationsCollapsedTranslationY)
+
+                    binding.mapRecommendationsPanel.translationY = nextTranslation
+                    true
+                }
+
+                MotionEvent.ACTION_UP,
+                MotionEvent.ACTION_CANCEL -> {
+                    settleRecommendationsPanel()
+                    true
+                }
+
+                else -> false
+            }
+        }
+
+        binding.mapDragHandle.setOnTouchListener(dragListener)
+        binding.mapLBLRecommendationsTitle.setOnTouchListener(dragListener)
+        binding.mapLBLRecommendationsSubtitle.setOnTouchListener(dragListener)
+    }
+
+    private fun settleRecommendationsPanel() {
+        val halfwayPoint = recommendationsCollapsedTranslationY / 2f
+        val targetTranslation = if (binding.mapRecommendationsPanel.translationY < halfwayPoint) {
+            0f
+        } else {
+            recommendationsCollapsedTranslationY
+        }
+
+        binding.mapRecommendationsPanel
+            .animate()
+            .translationY(targetTranslation)
+            .setDuration(180L)
+            .start()
+    }
+
+    private fun setupRecommendedEventsList() {
+        recommendedEventAdapter = MapRecommendedEventAdapter { event ->
+            openEventDetails(event.id)
+        }
+
+        binding.mapRVRecommendations.layoutManager = LinearLayoutManager(
+            requireContext(),
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
+        binding.mapRVRecommendations.adapter = recommendedEventAdapter
+    }
+
+    private fun loadPreferredCategories() {
+        val currentUserId = auth.currentUser?.uid ?: return
+
+        db.collection("users")
+            .document(currentUserId)
+            .get()
+            .addOnSuccessListener { userDocument ->
+                preferredCategories = userDocument
+                    .get("preferredCategories")
+                    .let { value -> value as? List<*> }
+                    ?.filterIsInstance<String>()
+                    .orEmpty()
+
+                updateRecommendedEvents(allEvents)
+            }
+            .addOnFailureListener {
+                preferredCategories = emptyList()
+                updateRecommendedEvents(allEvents)
+            }
+    }
+
+    private fun loadSavedEventIds() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                savedEventIds = savedEventsManager.getSavedEventIds()
+                updateRecommendedEvents(allEvents)
+            } catch (e: Exception) {
+                savedEventIds = emptySet()
+                updateRecommendedEvents(allEvents)
+            }
+        }
     }
 
     private fun askNotificationPermissionIfNeeded() {
@@ -195,8 +315,25 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
         eventsListener?.remove()
 
         eventsListener = eventRepository.observeEvents { events ->
+            allEvents = events
             renderEventsOnMap(map, events)
+            updateRecommendedEvents(events)
         }
+    }
+
+    private fun updateRecommendedEvents(events: List<Event>) {
+        val savedEvents = events.filter { event -> event.id in savedEventIds }
+
+        val recommendedEvents = recommendationEngine.getRecommendedEvents(
+            events = events,
+            preferredCategories = preferredCategories,
+            savedEvents = savedEvents
+        )
+        recommendedEventAdapter.submitList(recommendedEvents)
+
+        val hasRecommendations = recommendedEvents.isNotEmpty()
+        binding.mapRVRecommendations.visibility = if (hasRecommendations) View.VISIBLE else View.GONE
+        binding.mapLBLRecommendationsEmpty.visibility = if (hasRecommendations) View.GONE else View.VISIBLE
     }
 
     private fun renderEventsOnMap(map: GoogleMap, events: List<Event>) {
@@ -283,12 +420,7 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
 
         map.setOnInfoWindowClickListener { marker ->
             val eventId = marker.tag as? String ?: return@setOnInfoWindowClickListener
-
-            val intent = Intent(requireContext(), EventDetailsActivity::class.java).apply {
-                putExtra("event_id", eventId)
-            }
-
-            startActivity(intent)
+            openEventDetails(eventId)
         }
     }
 
@@ -312,6 +444,14 @@ class MapFragment : Fragment(R.layout.fragment_map), OnMapReadyCallback {
                 Toast.LENGTH_SHORT
             ).show()
         }
+    }
+
+    private fun openEventDetails(eventId: String) {
+        val intent = Intent(requireContext(), EventDetailsActivity::class.java).apply {
+            putExtra("event_id", eventId)
+        }
+
+        startActivity(intent)
     }
 
     override fun onDestroyView() {

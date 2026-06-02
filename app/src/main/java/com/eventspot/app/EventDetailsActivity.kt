@@ -127,7 +127,7 @@ class EventDetailsActivity : AppCompatActivity() {
         binding.eventDetailsLBLAddress.text = "Address: ${event.address}"
         binding.eventDetailsLBLDescription.text = event.description
         binding.eventDetailsLBLCategories.text = "Categories: ${event.categories.joinToString(", ")}"
-        binding.eventDetailsLBLDateTime.text = "Date: ${formatDateTimeRange(event.dateTimeMillis, event.endTimeMillis)}"
+        binding.eventDetailsLBLDateTime.text = "Date: ${formatDateTimeRange(event.dateTimeMillis, event.endTimeMillis, event.hasTime)}"
         binding.eventDetailsBTNNavigate.visibility =
             if (event.lat == 0.0 && event.lng == 0.0) View.GONE else View.VISIBLE
 
@@ -299,12 +299,22 @@ class EventDetailsActivity : AppCompatActivity() {
         }
     }
 
-    private fun formatDateTimeRange(startMillis: Long, endMillis: Long): String {
+    private fun formatDateTimeRange(startMillis: Long, endMillis: Long, hasTime: Boolean): String {
         val dateFormatter = SimpleDateFormat("d.M.yy", Locale.getDefault())
         val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
 
         val startDate = Date(startMillis)
         val startDateText = dateFormatter.format(startDate)
+
+        if (!hasTime) {
+            if (endMillis <= 0L) {
+                return startDateText
+            }
+
+            val endDateText = dateFormatter.format(Date(endMillis))
+            return if (startDateText == endDateText) startDateText else "$startDateText - $endDateText"
+        }
+
         val startTimeText = timeFormatter.format(startDate)
 
         if (endMillis <= 0L) {

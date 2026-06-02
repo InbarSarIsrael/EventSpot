@@ -41,6 +41,8 @@ data class Event(
 
     val endTimeMillis: Long = 0L,       // Event end timestamp
 
+    val hasTime: Boolean = true,        // False when only the event date is known
+
     @get:PropertyName("isActive")
     val isActive: Boolean = true,       // Indicates whether the event is currently active (soft delete control)
 
